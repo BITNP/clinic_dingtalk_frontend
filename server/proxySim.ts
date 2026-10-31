@@ -1,28 +1,43 @@
-'use strict'
+import crypto from 'node:crypto'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
-const crypto = require('crypto')
-
-// Local stand-in for clinic_proxy_dingtalk. It speaks the same protocol as
-// the real proxy (`/proxy` + `url` header, `/user` + `user-token` header) but
-// skips DingTalk: the `user-token` header is treated as the student ID.
+// Local stand-in for clinic_proxy_dingtalk. It speaks the same protocol as the
+// real proxy (`/proxy` + `url` header, `/user` + `user-token` header) but skips
+// DingTalk: the `user-token` header is treated as the student ID.
 //
 // Adapted from clinic_dingtalk_ng/server/proxySim.ts.
 
-function defaultConfig () {
+export interface ProxySimConfig {
+  backend: string
+  apiKey: string
+}
+
+type NextFunction = (err?: unknown) => void
+
+function defaultConfig(): ProxySimConfig {
   return {
     backend: process.env.CLINIC_BACKEND || 'http://127.0.0.1:8080',
     apiKey: process.env.CLINIC_API_KEY || 'local-dev-key'
   }
 }
 
-function createProxySim (config = defaultConfig()) {
-  return async function proxySim (req, res, next) {
+function headerValue(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] ?? ''
+  return value ?? ''
+}
+
+export function createProxySim(config: ProxySimConfig = defaultConfig()) {
+  return async function proxySim(
+    req: IncomingMessage,
+    res: ServerResponse,
+    next: NextFunction
+  ): Promise<void> {
     // Strip the query string so `/user?...` still matches.
     const path = (req.url || '/').split('?')[0]
 
     // ---- /user endpoints (simulated DingTalk login) ----
     if (path === '/user' || path === '/user/') {
-      const userToken = req.headers['user-token']
+      const userToken = headerValue(req.headers['user-token'])
       res.setHeader('Content-Type', 'application/json')
       if (req.method === 'GET') {
         // The real proxy answers 200 with status 403 in the body.
@@ -44,15 +59,15 @@ function createProxySim (config = defaultConfig()) {
       return
     }
 
-    // Let webpack-dev-server serve everything that isn't the proxy endpoint.
+    // Let Vite serve everything that isn't the proxy endpoint.
     if (path !== '/proxy' && path !== '/proxy/') {
       next()
       return
     }
 
     // ---- /proxy: forward to the local backend with a valid signature ----
-    const target = req.headers.url
-    const username = req.headers['user-token']
+    const target = headerValue(req.headers.url)
+    const username = headerValue(req.headers['user-token'])
     res.setHeader('Content-Type', 'application/json')
     if (!target || !username) {
       res.statusCode = 400
@@ -61,15 +76,15 @@ function createProxySim (config = defaultConfig()) {
     }
 
     // Buffer the request body for POST/PUT/PATCH.
-    const chunks = []
+    const chunks: Buffer[] = []
     for await (const chunk of req) {
-      chunks.push(chunk)
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
     }
     const rawBody = Buffer.concat(chunks)
 
     // Inject "user" into the JSON body (mirrors Program.cs).
-    let body = rawBody
-    const contentType = req.headers['content-type'] || ''
+    let body: Buffer = rawBody
+    const contentType = headerValue(req.headers['content-type'])
     const method = req.method || 'GET'
     if (
       (method === 'POST' || method === 'PUT' || method === 'PATCH') &&
@@ -81,7 +96,7 @@ function createProxySim (config = defaultConfig()) {
           json.user = username
         }
         body = Buffer.from(JSON.stringify(json), 'utf-8')
-      } catch (e) {
+      } catch {
         body = Buffer.from('{}', 'utf-8')
       }
     }
@@ -97,11 +112,11 @@ function createProxySim (config = defaultConfig()) {
       .update(`${config.apiKey}${username}${dateStr}`)
       .digest('hex')
 
-    const headers = {
+    const headers: Record<string, string> = {
       Date: dateStr,
       'X-API-KEY': apiKeySig,
       'X-Forwarded-For': req.socket.remoteAddress || '127.0.0.1',
-      Accept: req.headers.accept || '*/*'
+      Accept: headerValue(req.headers.accept) || '*/*'
     }
     if (body.length > 0) {
       headers['Content-Type'] = contentType || 'application/json'
@@ -109,14 +124,14 @@ function createProxySim (config = defaultConfig()) {
     }
 
     try {
-      const resp = await fetch(backendUrl, {
+      const response = await fetch(backendUrl, {
         method,
         headers,
         body: method === 'GET' || method === 'HEAD' ? undefined : body
       })
 
-      res.statusCode = resp.status
-      resp.headers.forEach((value, key) => {
+      res.statusCode = response.status
+      response.headers.forEach((value, key) => {
         if (
           key.toLowerCase() !== 'content-encoding' &&
           key.toLowerCase() !== 'transfer-encoding' &&
@@ -125,17 +140,15 @@ function createProxySim (config = defaultConfig()) {
           res.setHeader(key, value)
         }
       })
-      res.end(Buffer.from(await resp.arrayBuffer()))
+      res.end(Buffer.from(await response.arrayBuffer()))
     } catch (err) {
       res.statusCode = 502
       res.setHeader('Content-Type', 'application/json')
       res.end(
         JSON.stringify({
-          error: `backend unreachable: ${err.message || err}`
+          error: `backend unreachable: ${err instanceof Error ? err.message : String(err)}`
         })
       )
     }
   }
 }
-
-module.exports = { createProxySim }

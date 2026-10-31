@@ -49,6 +49,23 @@ npm run build --report
 
 通常我会在本地同时启动 django, grails, 前端部分。
 
+``` bash
+npm install
+npm run dev
+```
+
+本地开发默认绕过钉钉登录：`src/dev.js` 会把 `DEV_USER`（默认 `student01`）写入
+`user-token`，`build/proxySim.js` 模拟 `/user` 和 `/proxy`，并把签名后的请求转发到
+`CLINIC_BACKEND`（默认 `http://127.0.0.1:8080`，对应 `CLINIC_API_KEY=local-dev-key`）。
+
+连接旧 Django 后端时：
+
+``` bash
+CLINIC_BACKEND=http://127.0.0.1:8000 CLINIC_API_KEY=oh-my-tlb npm run dev
+```
+
+`npm run dev-proxy` 仍然使用线上代理和真实钉钉登录。
+
 ## Contributes
 
 欢迎提交 Issues 和 PR

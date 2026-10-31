@@ -11,10 +11,12 @@ import { TransferDom } from 'vux'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import store from './store'
+import './dev'
 
 Vue.use(VueAxios, axios)
 let BASE_URL = process.env.BASE_URL
 let PROXY_URL = process.env.PROXY_URL
+let USER_URL = process.env.USER_URL
 
 // Add a request interceptor
 axios.interceptors.request.use(
@@ -30,7 +32,7 @@ axios.interceptors.request.use(
     }
     // substitude url with proxy url
     // dirty hack that not substitude user
-    if (!config.url.startsWith('http')) {
+    if (!config.url.startsWith('http') && config.url !== USER_URL) {
       config.url = PROXY_URL
     }
     return config

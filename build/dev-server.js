@@ -1,90 +1,75 @@
-require('./check-versions')()
+'use strict'
 
-var config = require('../config')
+const path = require('path')
+const webpack = require('webpack')
+const express = require('express')
+const historyApiFallback = require('connect-history-api-fallback')
+const webpackDevMiddleware = require('webpack-dev-middleware')
+const webpackHotMiddleware = require('webpack-hot-middleware')
+const config = require('../config')
+const { createProxySim } = require('./proxySim')
+
 if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = JSON.parse(config.dev.env.NODE_ENV)
+  process.env.NODE_ENV = 'development'
 }
 
-var opn = require('opn')
-var path = require('path')
-var express = require('express')
-var webpack = require('webpack')
-var proxyMiddleware = require('http-proxy-middleware')
-var webpackConfig = require('./webpack.dev.conf')
+// `local` uses build/webpack.dev-local.conf.js (local backend + DingTalk
+// bypass); `proxy` uses build/webpack.dev.conf.js (real remote proxy).
+const mode = process.argv[2] === 'proxy' ? 'proxy' : 'local'
+const webpackConfigPath = mode === 'proxy'
+  ? './webpack.dev.conf'
+  : './webpack.dev-local.conf'
 
-// default port where dev server listens for incoming traffic
-var port = process.env.PORT || config.dev.port
-// automatically open browser, if not set will be false
-var autoOpenBrowser = !!config.dev.autoOpenBrowser
-// Define HTTP proxies to your custom API backend
-// https://github.com/chimurai/http-proxy-middleware
-var proxyTable = config.dev.proxyTable
+async function start () {
+  const webpackConfig = await require(webpackConfigPath)
+  const compiler = webpack(webpackConfig)
 
-var app = express()
-var compiler = webpack(webpackConfig)
-
-var devMiddleware = require('webpack-dev-middleware')(compiler, {
-  publicPath: webpackConfig.output.publicPath,
-  quiet: true
-})
-
-var hotMiddleware = require('webpack-hot-middleware')(compiler, {
-  log: () => {}
-})
-// force page reload when html-webpack-plugin template changes
-compiler.plugin('compilation', function (compilation) {
-  compilation.plugin('html-webpack-plugin-after-emit', function (data, cb) {
-    hotMiddleware.publish({ action: 'reload' })
-    cb()
+  // webpack-dev-server used to inject the HMR client automatically.
+  const entry = webpackConfig.entry || {}
+  Object.keys(entry).forEach(name => {
+    entry[name] = ['webpack-hot-middleware/client?reload=true'].concat(entry[name])
   })
-})
 
-// proxy api requests
-Object.keys(proxyTable).forEach(function (context) {
-  var options = proxyTable[context]
-  if (typeof options === 'string') {
-    options = { target: options }
-  }
-  app.use(proxyMiddleware(options.filter || context, options))
-})
+  const app = express()
+  const hotMiddleware = webpackHotMiddleware(compiler, { log: () => {} })
 
-// handle fallback for HTML5 history API
-app.use(require('connect-history-api-fallback')())
+  // Force a page reload when html-webpack-plugin re-emits index.html.
+  compiler.plugin('compilation', compilation => {
+    compilation.plugin('html-webpack-plugin-after-emit', (data, cb) => {
+      hotMiddleware.publish({ action: 'reload' })
+      cb()
+    })
+  })
 
-// serve webpack bundle output
-app.use(devMiddleware)
+  // Local stand-in for clinic_proxy_dingtalk (`/user` and `/proxy`).
+  app.use(createProxySim())
 
-// enable hot-reload and state-preserving
-// compilation error display
-app.use(hotMiddleware)
+  // SPA fallback, then the webpack bundle and HMR event stream.
+  app.use(historyApiFallback())
+  app.use(webpackDevMiddleware(compiler, {
+    publicPath: webpackConfig.output.publicPath,
+    quiet: true
+  }))
+  app.use(hotMiddleware)
 
-// serve pure static assets
-var staticPath = path.posix.join(config.dev.assetsPublicPath, config.dev.assetsSubDirectory)
-app.use(staticPath, express.static('./static'))
+  // Serve files copied from static/ (mirrors webpack-dev-server's setup).
+  const staticPath = path.posix.join(webpackConfig.devServer.publicPath, 'static')
+  app.use(staticPath, express.static(path.resolve(__dirname, '../static')))
 
-var uri = 'http://localhost:' + port
+  const host = webpackConfig.devServer.host || config.dev.host
+  const port = webpackConfig.devServer.port || config.dev.port
 
-var _resolve
-var readyPromise = new Promise(resolve => {
-  _resolve = resolve
-})
+  const server = app.listen(port, host, () => {
+    console.log(`> Starting ${mode} dev server...`)
+    console.log(`> Listening at http://localhost:${port}\n`)
+  })
 
-console.log('> Starting dev server...')
-devMiddleware.waitUntilValid(() => {
-  console.log('> Listening at ' + uri + '\n')
-  // when env is testing, don't need open it
-
-  if (autoOpenBrowser && process.env.NODE_ENV !== 'testing') {
-    opn(uri)
-  }
-  _resolve()
-})
-
-var server = app.listen(port)
-
-module.exports = {
-  ready: readyPromise,
-  close: () => {
-    server.close()
-  }
+  process.on('SIGINT', () => {
+    server.close(() => process.exit(0))
+  })
 }
+
+start().catch(err => {
+  console.error(err)
+  process.exit(1)
+})

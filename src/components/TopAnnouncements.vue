@@ -9,7 +9,9 @@
   >
     <van-icon name="volume-o" />
     <transition name="switch" mode="out-in">
-      <span :key="current.id" class="top-announcement-text">{{ current.brief }}</span>
+      <span :key="current.id" class="top-announcement-text">
+        {{ current.brief || current.title }}
+      </span>
     </transition>
   </div>
 </template>

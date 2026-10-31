@@ -8,7 +8,8 @@
         readonly
         is-link
         required
-        @click="campusPicker = true"
+        :disabled="!create"
+        @click="openCampusPicker"
       />
 
       <ServiceDatePicker v-model="appointmentTime" :options="dateOptions" :disabled="!create" />
@@ -186,6 +187,11 @@ const dateOptions = computed<ServiceDateOption[]>(() => {
       endLabel: date.endLabel
     }))
 })
+
+function openCampusPicker(): void {
+  if (!props.create) return
+  campusPicker.value = true
+}
 
 function selectCampus(name: string): void {
   if (name !== campus.value) {

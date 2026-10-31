@@ -11,22 +11,11 @@
       />
     </van-cell-group>
 
-    <van-empty
-      v-if="!catalog.announcementList.length && !catalog.loading"
-      description="暂无公告"
-    />
+    <van-empty v-if="!catalog.announcementList.length && !catalog.loading" description="暂无公告" />
 
-    <van-popup
-      v-model:show="showPopup"
-      position="right"
-      :style="{ width: '100%', height: '100%' }"
-    >
+    <van-popup v-model:show="showPopup" position="right" :style="{ width: '100%', height: '100%' }">
       <div v-if="selected" class="announcement-popup">
-        <van-nav-bar
-          :title="selected.title"
-          left-arrow
-          @click-left="showPopup = false"
-        />
+        <van-nav-bar :title="selected.title" left-arrow @click-left="showPopup = false" />
 
         <div class="announcement-meta">
           <van-tag :type="tagType(selected.tag) || undefined">
@@ -40,9 +29,7 @@
         </div>
 
         <div class="announcement-actions">
-          <van-button type="primary" block round @click="showPopup = false">
-            确认
-          </van-button>
+          <van-button type="primary" block round @click="showPopup = false"> 确认 </van-button>
         </div>
       </div>
     </van-popup>

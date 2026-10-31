@@ -11,10 +11,7 @@
       @load="onLoad"
     />
 
-    <van-empty
-      v-if="listFinished && !tickets.finished.length"
-      description="暂无已处理工单"
-    />
+    <van-empty v-if="listFinished && !tickets.finished.length" description="暂无已处理工单" />
   </div>
 </template>
 

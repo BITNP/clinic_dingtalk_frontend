@@ -31,6 +31,16 @@ export default tseslint.config(
     rules: {
       'vue/multi-word-component-names': 'off',
       'vue/no-v-html': 'off',
+      // Layout is owned by Prettier; keep ESLint focused on correctness.
+      'vue/max-attributes-per-line': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/multiline-html-element-content-newline': 'off',
+      'vue/html-self-closing': 'off',
+      'vue/html-indent': 'off',
+      'vue/attributes-order': 'off',
+      'vue/first-attribute-linebreak': 'off',
+      'vue/html-closing-bracket-newline': 'off',
+      'vue/mustache-interpolation-spacing': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': [
         'warn',

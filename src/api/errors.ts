@@ -36,8 +36,7 @@ export function toApiError(error: unknown): ApiError {
     const status = error.response?.status
     const data = error.response?.data
     const message =
-      extractMessage(data) ||
-      (status ? `请求失败（${status}）` : '网络连接失败，请稍后重试')
+      extractMessage(data) || (status ? `请求失败（${status}）` : '网络连接失败，请稍后重试')
     return new ApiError(message, status, data)
   }
   if (error instanceof Error) {

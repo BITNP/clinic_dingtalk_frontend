@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import vue from '@vitejs/plugin-vue'
 import legacy from '@vitejs/plugin-legacy'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { VantResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
@@ -36,7 +37,16 @@ export default defineConfig(({ mode }) => {
       legacy({
         targets: ['iOS >= 12', 'Android >= 6'],
         modernPolyfills: true
-      })
+      }),
+      ...(mode === 'analyze'
+        ? [
+            visualizer({
+              filename: 'dist/stats.html',
+              gzipSize: true,
+              brotliSize: true
+            })
+          ]
+        : [])
     ],
     resolve: {
       alias: {

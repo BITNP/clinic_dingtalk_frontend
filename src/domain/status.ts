@@ -13,12 +13,7 @@ export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
 
 export const WORKING_STATUSES: TicketStatus[] = ['pending', 'confirmed', 'arrived', 'in_progress']
 
-export const FINISHED_STATUSES: TicketStatus[] = [
-  'rejected',
-  'completed',
-  'referred',
-  'no_show'
-]
+export const FINISHED_STATUSES: TicketStatus[] = ['rejected', 'completed', 'referred', 'no_show']
 
 export type StatusTagType = 'primary' | 'success' | 'danger' | 'warning' | ''
 

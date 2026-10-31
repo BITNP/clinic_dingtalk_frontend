@@ -19,7 +19,9 @@ export const endpoints = {
       .then((response) => response.data)
   },
 
-  listRooms(params: { enabled?: boolean; page?: number; pageSize?: number } = {}): Promise<Page<Room>> {
+  listRooms(
+    params: { enabled?: boolean; page?: number; pageSize?: number } = {}
+  ): Promise<Page<Room>> {
     return api.get<Page<Room>>('/rooms', { params }).then((response) => response.data)
   },
 
@@ -30,9 +32,7 @@ export const endpoints = {
   },
 
   getWorkingTicket(): Promise<WorkingTicketResponse> {
-    return api
-      .get<WorkingTicketResponse>('/tickets/working')
-      .then((response) => response.data)
+    return api.get<WorkingTicketResponse>('/tickets/working').then((response) => response.data)
   },
 
   getFinishedTickets(page = 1, pageSize = 20): Promise<Page<Ticket>> {

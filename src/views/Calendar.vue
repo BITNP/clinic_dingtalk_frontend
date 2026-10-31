@@ -16,10 +16,7 @@
 
     <DatePreview v-for="date in datesSelected" :key="date.id" :date="date" />
 
-    <van-empty
-      v-if="!catalog.dateOptions.length && !catalog.loading"
-      description="暂无服务安排"
-    />
+    <van-empty v-if="!catalog.dateOptions.length && !catalog.loading" description="暂无服务安排" />
   </div>
 </template>
 

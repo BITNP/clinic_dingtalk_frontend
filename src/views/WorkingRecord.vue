@@ -2,21 +2,13 @@
   <div>
     <RecordPreview v-if="ticket" :record="ticket" editable @edit="display = true" />
 
-    <van-empty
-      v-else-if="tickets.workingLoaded"
-      description="当前没有正在处理的工单"
-    />
+    <van-empty v-else-if="tickets.workingLoaded" description="当前没有正在处理的工单" />
 
     <div v-else class="loading-state">
       <van-loading vertical>正在加载...</van-loading>
     </div>
 
-    <van-popup
-      v-model:show="display"
-      position="bottom"
-      round
-      :style="{ height: '92%' }"
-    >
+    <van-popup v-model:show="display" position="bottom" round :style="{ height: '92%' }">
       <PopupContent
         v-if="display && ticket"
         :ticket="ticket"

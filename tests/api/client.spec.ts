@@ -13,8 +13,6 @@ describe('buildApiPath', () => {
   })
 
   it('keeps query strings intact', () => {
-    expect(buildApiPath('/tickets/finished?page=2', '/api')).toBe(
-      '/api/tickets/finished?page=2'
-    )
+    expect(buildApiPath('/tickets/finished?page=2', '/api')).toBe('/api/tickets/finished?page=2')
   })
 })

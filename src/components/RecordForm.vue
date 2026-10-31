@@ -51,12 +51,7 @@
     </van-cell-group>
 
     <van-cell-group inset title="选填项，这将有助于我们提供更好的服务">
-      <van-field
-        v-model="model"
-        label="电脑型号"
-        placeholder="例如 ThinkPad X1"
-        maxlength="200"
-      />
+      <van-field v-model="model" label="电脑型号" placeholder="例如 ThinkPad X1" maxlength="200" />
 
       <van-field
         v-model="password"
@@ -177,9 +172,7 @@ const dateOptions = computed<ServiceDateOption[]>(() => {
   // Keep the current date visible when editing a booking whose date is no
   // longer selectable (for example because the room filled up).
   if (!props.create && appointmentTime.value && !byDate.has(appointmentTime.value)) {
-    const current = catalog.datesWithRoom.find(
-      (date) => date.dateOnly === appointmentTime.value
-    )
+    const current = catalog.datesWithRoom.find((date) => date.dateOnly === appointmentTime.value)
     if (current) byDate.set(current.dateOnly, current)
   }
 

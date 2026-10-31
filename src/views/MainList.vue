@@ -50,8 +50,7 @@ const tabNum = computed(() => {
 const showNewButton = computed(() => tickets.workingLoaded && !tickets.hasWorking)
 
 function onTabChange(name: number | string): void {
-  const index =
-    typeof name === 'number' ? name : tabs.findIndex((tab) => tab.title === name)
+  const index = typeof name === 'number' ? name : tabs.findIndex((tab) => tab.title === name)
   if (index < 0 || index === tabNum.value) return
   router.push({ name: tabs[index].name })
 }

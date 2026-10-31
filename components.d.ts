@@ -7,12 +7,29 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    DatePreview: typeof import('./src/components/DatePreview.vue')['default']
+    Footer: typeof import('./src/components/Footer.vue')['default']
+    MarkdownContent: typeof import('./src/components/MarkdownContent.vue')['default']
+    RecordPreview: typeof import('./src/components/RecordPreview.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    StatusFlow: typeof import('./src/components/StatusFlow.vue')['default']
+    TicketSummary: typeof import('./src/components/TicketSummary.vue')['default']
+    TopAnnouncements: typeof import('./src/components/TopAnnouncements.vue')['default']
     VanButton: typeof import('vant/es')['Button']
+    VanCell: typeof import('vant/es')['Cell']
+    VanCellGroup: typeof import('vant/es')['CellGroup']
+    VanDivider: typeof import('vant/es')['Divider']
     VanEmpty: typeof import('vant/es')['Empty']
+    VanIcon: typeof import('vant/es')['Icon']
+    VanList: typeof import('vant/es')['List']
     VanLoading: typeof import('vant/es')['Loading']
+    VanNavBar: typeof import('vant/es')['NavBar']
     VanOverlay: typeof import('vant/es')['Overlay']
+    VanPopup: typeof import('vant/es')['Popup']
+    VanTab: typeof import('vant/es')['Tab']
+    VanTabs: typeof import('vant/es')['Tabs']
+    VanTag: typeof import('vant/es')['Tag']
     VanToast: typeof import('vant/es')['Toast']
   }
 }

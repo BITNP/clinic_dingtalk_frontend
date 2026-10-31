@@ -3,7 +3,7 @@
 - **Reviewed:** 2026-10-31
 - **Scope:** `clinic_dingtalk_frontend` (Vue 2.6 + VUX 2 + webpack 3)
 - **Backend scope:** current `clinic-backend` only; the legacy Django backend is deprecated and out of scope.
-- **Status:** review complete; source code was not modified by this review.
+- **Status:** resolved in `feat/vue3-ts-new-api`; see [`RESOLUTION.md`](./RESOLUTION.md).
 
 ## Verification performed
 

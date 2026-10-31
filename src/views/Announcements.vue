@@ -41,6 +41,7 @@ import { onMounted, ref } from 'vue'
 
 import type { Announcement } from '@/api/types'
 import MarkdownContent from '@/components/MarkdownContent.vue'
+import { announcementTagLabel, announcementTagType } from '@/domain/announcement'
 import { formatDateTime } from '@/domain/format'
 import { useCatalogStore } from '@/stores/catalog'
 
@@ -48,24 +49,12 @@ const catalog = useCatalogStore()
 const showPopup = ref(false)
 const selected = ref<Announcement | null>(null)
 
-const TAG_LABELS: Record<string, string> = {
-  normal: '普通公告',
-  pinned: '置顶公告',
-  tos: '免责声明',
-  // Legacy spellings kept only for old data during rollout.
-  AN: '普通公告',
-  TA: '置顶公告',
-  TOS: '免责声明'
-}
-
 function tagLabel(tag: string): string {
-  return TAG_LABELS[tag] ?? tag
+  return announcementTagLabel(tag)
 }
 
 function tagType(tag: string): 'primary' | 'warning' | 'success' | '' {
-  if (tag === 'pinned' || tag === 'TA') return 'warning'
-  if (tag === 'tos' || tag === 'TOS') return 'primary'
-  return ''
+  return announcementTagType(tag)
 }
 
 function open(item: Announcement): void {

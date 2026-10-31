@@ -5,7 +5,7 @@
 // the `user-token` header as the student ID. Opening the app with a `corpId`
 // query parameter (i.e. inside DingTalk) keeps the real login flow.
 
-const devUser = String(import.meta.env.VITE_DEV_USER ?? '').trim()
+const devUser = String(import.meta.env.VITE_DEV_USER ?? 'student01').trim()
 
 if (
   import.meta.env.DEV &&

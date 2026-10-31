@@ -1,114 +1,138 @@
 <template>
   <div>
-    <Flow>
-      <flow-state state="1" title="创建工单" is-done></flow-state>
-      <flow-line :is-done="[0,2,3,4,5,6,7,8,9].includes(record.status)" tip="正在审核"></flow-line>
+    <div class="weui-wepay-flow">
+      <div class="weui-wepay-flow__bd">
+        <div class="weui-wepay-flow__li weui-wepay-flow__li_done">
+          <div class="weui-wepay-flow__state">1</div>
+          <p class="weui-wepay-flow__title-bottom">创建工单</p>
+        </div>
 
-      <flow-state state="2" title="审核通过" :is-done="[0,2,4,5,6,7,8].includes(record.status)"></flow-state>
-      <flow-line
-        :is-done="[3,5,6,7,8,9].includes(record.status)"
-        :tip="[0, 2, 4].includes(record.status)?'可以前往诊所' : ''"
-      ></flow-line>
+        <div
+          class="weui-wepay-flow__line"
+          :class="lineClass(line1Done, '正在审核')"
+        >
+          <div class="weui-wepay-flow__process"></div>
+          <div v-if="!line1Done" class="weui-wepay-flow__info-top">正在审核</div>
+        </div>
 
-      <flow-state state="3" title="已到诊所" :is-done="[5,6,7,8].includes(record.status)"></flow-state>
-      <flow-line
-        :is-done="[3,6,7,8,9].includes(record.status)"
-        :tip="[5].includes(record.status)?'正在服务':''"
-      ></flow-line>
+        <div
+          class="weui-wepay-flow__li"
+          :class="{ 'weui-wepay-flow__li_done': state2Done }"
+        >
+          <div class="weui-wepay-flow__state">2</div>
+          <p class="weui-wepay-flow__title-bottom">审核通过</p>
+        </div>
 
-      <flow-state state="4" title="完成服务" :is-done="FINISHED_STATUS.includes(record.status)"></flow-state>
-    </Flow>
-    <FormPreview
-      class="form-preview"
-      header-label="工单状态"
-      :header-value="STATUS_MAP[record.status]"
-      :body-items="dict2list(record)"
-      :footer-buttons="WORKING_STATUS.includes(record.status)?dict2button(record):[]"
-    />
+        <div
+          class="weui-wepay-flow__line"
+          :class="lineClass(line2Done, '可以前往诊所')"
+        >
+          <div class="weui-wepay-flow__process"></div>
+          <div v-if="!line2Done && line2Tip" class="weui-wepay-flow__info-top">
+            {{ line2Tip }}
+          </div>
+        </div>
+
+        <div
+          class="weui-wepay-flow__li"
+          :class="{ 'weui-wepay-flow__li_done': state3Done }"
+        >
+          <div class="weui-wepay-flow__state">3</div>
+          <p class="weui-wepay-flow__title-bottom">已到诊所</p>
+        </div>
+
+        <div
+          class="weui-wepay-flow__line"
+          :class="lineClass(line3Done, '正在服务')"
+        >
+          <div class="weui-wepay-flow__process"></div>
+          <div v-if="!line3Done && line3Tip" class="weui-wepay-flow__info-top">
+            {{ line3Tip }}
+          </div>
+        </div>
+
+        <div
+          class="weui-wepay-flow__li"
+          :class="{ 'weui-wepay-flow__li_done': state4Done }"
+        >
+          <div class="weui-wepay-flow__state">4</div>
+          <p class="weui-wepay-flow__title-bottom">完成服务</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="vux-form-preview weui-form-preview">
+      <div class="weui-form-preview__hd">
+        <label class="weui-form-preview__label">工单状态</label>
+        <em class="weui-form-preview__value">{{ statusLabel(record.status) }}</em>
+      </div>
+      <div class="weui-form-preview__bd">
+        <div
+          v-for="item in items"
+          :key="item.label"
+          class="weui-form-preview__item"
+        >
+          <label class="weui-form-preview__label">{{ item.label }}</label>
+          <span class="weui-form-preview__value">{{ item.value }}</span>
+        </div>
+      </div>
+      <div v-if="canEdit" class="weui-form-preview__ft">
+        <a
+          class="weui-form-preview__btn weui-form-preview__btn_primary"
+          href="javascript:;"
+          @click="$emit('edit')"
+        >
+          编辑
+        </a>
+      </div>
+    </div>
     <br />
   </div>
 </template>
 
-<script>
-import { Flow, FlowState, FlowLine, FormPreview } from 'vux'
-export default {
-  components: { Flow, FlowState, FlowLine, FormPreview },
-  data: () => ({
-    WORKING_STATUS: [0, 1, 2, 4, 5],
-    FINISHED_STATUS: [3, 6, 7, 8, 9],
-    STATUS_MAP: {
-      0: '上单问题未解决',
-      1: '预约待确认',
-      2: '预约已确认',
-      3: '预约已驳回',
-      4: '登记待受理',
-      5: '正在处理',
-      6: '已解决问题',
-      7: '建议返厂',
-      8: '交给明天解决',
-      9: '未到诊所',
-      _: 'error'
-    },
-    KEY_TRANSLATION: {
-      appointment_time: '预约时间',
-      campus: '校区',
-      description: '问题描述',
-      model: '电脑型号',
-      phone_num: '手机号',
-      realname: '真实姓名',
-      reject_reason: '工单申请驳回原因',
-      status: '工单状态',
-      url: 'URL',
-      worker_description: '工作人员对问题描述',
-      password: '电脑开机密码'
-    }
-  }),
-  methods: {
-    dict2list (data) {
-      let keys = [
-        'appointment_time',
-        'description',
-        'model',
-        'password',
-        'campus',
-        'phone_num',
-        'realname',
-        'workder_description',
-        'reject_reason'
-      ]
-      let ret = []
-      ret.push({ label: '工单号', value: this.getId(data.url) })
-      for (let key of keys) {
-        if (data[key]) {
-          ret.push({ label: this.KEY_TRANSLATION[key], value: data[key] })
-        }
-      }
+<script setup lang="ts">
+import { computed } from 'vue'
 
-      return ret
-    },
-    dict2button (data) {
-      return [
-        {
-          style: 'primary',
-          text: '编辑',
-          onButtonClick: () => this.$emit('edit-current-record')
-        }
-      ]
-    },
-    getId (url) {
-      let res = url.match(/\/\d+\//)
-      res = res[res.length - 1]
-      res = res.slice(1, res.length - 1)
-      return res.padStart(8, '0')
-    }
-  },
-  props: ['record']
+import type { Ticket } from '@/api/types'
+import { isEditableStatus, isFinishedStatus, statusLabel } from '@/domain/status'
+import { buildPreviewItems } from '@/domain/ticket'
+
+const props = defineProps<{
+  record: Ticket
+}>()
+
+defineEmits<{
+  edit: []
+}>()
+
+const status = computed(() => props.record.status)
+const items = computed(() => buildPreviewItems(props.record))
+const canEdit = computed(() => isEditableStatus(props.record.status))
+
+const line1Done = computed(() => status.value !== 'pending')
+const state2Done = computed(() =>
+  ['confirmed', 'arrived', 'in_progress', 'completed', 'referred'].includes(status.value)
+)
+const line2Done = computed(() =>
+  ['rejected', 'in_progress', 'completed', 'referred', 'no_show'].includes(status.value)
+)
+const state3Done = computed(() =>
+  ['in_progress', 'completed', 'referred'].includes(status.value)
+)
+const line3Done = computed(() =>
+  ['rejected', 'completed', 'referred', 'no_show'].includes(status.value)
+)
+const state4Done = computed(() => isFinishedStatus(status.value))
+
+const line2Tip = computed(() =>
+  ['confirmed', 'arrived'].includes(status.value) ? '可以前往诊所' : ''
+)
+const line3Tip = computed(() => (status.value === 'in_progress' ? '正在服务' : ''))
+
+function lineClass(done: boolean, tip: string): Record<string, boolean> {
+  return {
+    'weui-wepay-flow__line_done': done,
+    'weui-wepay-flow__line_ing': !done && Boolean(tip)
+  }
 }
 </script>
-
-<style>
-/* 这代码确实有用 */
-/* .form-preview{
-  background-color:blueviolet;
-} */
-</style>

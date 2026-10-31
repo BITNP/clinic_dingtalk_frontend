@@ -1,71 +1,146 @@
-# 诊所在线预约系统i北理前端
+# 诊所在线预约系统 — 钉钉前端
 
-本项目为诊所在线预约系统学校i北理平台上的前端。
+电脑诊所预约系统的钉钉 H5 前端。用户通过钉钉工作台进入，完成公告查看、服务日历查询、新建工单、查看/编辑当前工单和已处理工单。
 
-## 特性
+## 技术栈
 
-- 使用 Vue.js + VUX 提供最佳体验
-- 提供公告、日历、当前工单、历史工单等等功能
-- 接入i北理
+| 层 | 选择 |
+| --- | --- |
+| 框架 | Vue 3 |
+| 构建 | Vite 5 |
+| 语言 | TypeScript（严格模式） |
+| 状态 | Pinia |
+| 路由 | Vue Router 4（hash 模式） |
+| UI | Original VUX/WeUI visual design, ported to Vue 3 components |
+| HTTP | axios 1.x |
+| Markdown | markdown-it + DOMPurify |
+| 测试 | Vitest + Vue Test Utils |
 
+界面保持迁移前的 VUX/WeUI 视觉设计；组件交互已用 Vue 3 重写，Vant 不再使用。
 
-## 访问方式
+## 后端
 
-i北理 -> 我的北理 -> IT服务 -> 电脑义诊
+本前端只使用 **`clinic-backend` 的新版客户端 API**：
 
-## 项目架构图
+- `GET /api/announcements`
+- `GET /api/service-dates`
+- `GET /api/rooms`
+- `GET /api/tickets/working`
+- `GET /api/tickets/finished`
+- `POST /api/tickets`
+- `PUT /api/tickets/{id}`
+- `DELETE /api/tickets/{id}`
 
-![架构](./docs/images/archi.svg)
+旧版 Django 接口（`/api/wechat/*`、`/api/announcement/*`、`/api/campus/*`、`/api/date/*`）已不再调用。`tests/legacy-guard.spec.ts` 会阻止它们重新进入 `src/`。
 
-## 项目结构
+请求仍然经过 `clinic_proxy_dingtalk`：
 
-- `records/` i北理前端
-- `misc/` 其他内容
+1. 前端通过 `/user` 完成钉钉免登；
+2. 代理把 `user-token` 换成学号，并在每个后端请求上追加 `?username=...`；
+3. 代理用 `Date` + `X-API-KEY` 签名请求。
 
-## 使用方式
+## 环境要求
 
-与 https://github.com/BITNP/clinic_proxy_dingtalk 一同部署。
+- Node.js **>= 20**（见 `.nvmrc`）
+- npm
+- 本地运行时需要 `clinic-backend` 监听 `127.0.0.1:8080`（或通过 `CLINIC_BACKEND` 指定）
 
-> Records management for clinic wechat SPA
+## 本地开发
 
-## Build Setup
-
-``` bash
-# install dependencies
+```bash
 npm install
-
+cp .env.example .env.local   # 可选；默认值已经能跑本地开发
 npm run dev
+```
 
-# build for production with minification
+开发服务器监听 <http://localhost:8888>。
+
+本地开发默认绕过钉钉登录：
+
+- `src/dev.ts` 把 `VITE_DEV_USER`（默认 `student01`）写入 `user-token`；
+- `server/proxySim.ts` 模拟 `/user` 和 `/proxy`，并把签名后的请求转发到
+  `CLINIC_BACKEND`（默认 `http://127.0.0.1:8080`）；
+- `CLINIC_API_KEY` 默认 `local-dev-key`，需要与后端本地配置一致。
+
+打开带 `corpId` 参数的地址（即真实钉钉环境）时，`dev.ts` 不会写入测试账号，应用会走真实的
+`dd.ready()` / `requestAuthCode()` 流程。
+
+连接真实代理而不是本地模拟器：
+
+```bash
+VITE_PROXY_URL=https://clinicp.bitnp.net/proxy \
+VITE_USER_URL=https://clinicp.bitnp.net/user \
+npm run dev
+```
+
+## 构建与部署
+
+```bash
 npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
 ```
 
-## FAQ
+构建产物在 `dist/`，静态资源基路径为 `/lightapp/`。部署时把 `dist/` 内容放到
+`clinic_proxy_dingtalk` 的静态根目录（该服务把 `/lightapp` 映射到自己的文件服务器根目录），
+例如 Docker 部署中的 `/app/wwwroot`。
 
-### 如何创建本地开发环境
+构建会：
 
-通常我会在本地同时启动 django, grails, 前端部分。
+- 不生成 source map；
+- 生成 iOS 12+ / Android 6+ 的 legacy 产物与 polyfill；
+- 运行 `scripts/check-bundle.mjs` 检查单 chunk 与总 gzip 预算。
 
-``` bash
-npm install
-npm run dev
+## 常用命令
+
+```bash
+npm run dev          # 开发服务器
+npm run build        # 类型检查 + 生产构建 + 产物检查
+npm run build-only   # 只构建
+npm run build:analyze# 构建并生成 dist/stats.html
+npm run type-check   # vue-tsc
+npm run lint         # ESLint
+npm test             # Vitest
+npm run verify       # lint + type-check + test + build
 ```
 
-本地开发默认绕过钉钉登录：`src/dev.js` 会把 `DEV_USER`（默认 `student01`）写入
-`user-token`，`build/proxySim.js` 模拟 `/user` 和 `/proxy`，并把签名后的请求转发到
-`CLINIC_BACKEND`（默认 `http://127.0.0.1:8080`，对应 `CLINIC_API_KEY=local-dev-key`）。
+## 目录结构
 
-连接旧 Django 后端时：
-
-``` bash
-CLINIC_BACKEND=http://127.0.0.1:8000 CLINIC_API_KEY=oh-my-tlb npm run dev
+```text
+src/
+  api/          axios 客户端、新 API 类型与端点
+  auth/         user-token 存取
+  components/   通用组件（表单、预览、状态流、TOS 等）
+  domain/       状态映射、工单草稿、日历聚合、格式化
+  platform/     钉钉 JSAPI 适配器
+  router/       路由
+  stores/       Pinia stores
+  views/        页面
+server/
+  proxySim.ts   本地开发代理模拟器
+tests/          Vitest 单元/组件测试与 API fixtures
 ```
 
-`npm run dev-proxy` 仍然使用线上代理和真实钉钉登录。
+## 浏览器支持
 
-## Contributes
+- iOS >= 12
+- Android >= 6
 
-欢迎提交 Issues 和 PR
+构建使用 `@vitejs/plugin-legacy` 与 `modernPolyfills`，覆盖
+`String.prototype.startsWith`、`Array.prototype.includes`、
+`String.prototype.padStart` 等旧 WebView 缺失的内置方法。发布前仍需在目标钉钉客户端上做一次真机冒烟。
+
+## 相关项目
+
+- `clinic-backend` — 新后端，API 契约见其 `API.md`
+- `clinic_proxy_dingtalk` — 钉钉免登与 API 签名代理
+- `clinic_admin_frontend` — 管理端
+- `clinic_dingtalk_ng` — 已弃用的旧版钉钉前端，仅作参考，不再新增功能
+
+## 迁移记录
+
+- 问题清单：`docs/ISSUES.md`
+- 修复对照：`docs/RESOLUTION.md`
+- 迁移计划：`docs/MIGRATION_PLAN.md`
+
+## License
+
+内部项目，未单独声明开源许可证。

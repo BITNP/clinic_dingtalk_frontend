@@ -1,92 +1,67 @@
 <template>
   <div id="app">
-    <router-view></router-view>
-    <toast
-      v-model="toast.show"
-      type="text"
-      :time="2000"
-      is-show-mask
-      :text="toast.text"
-      :position="toast.position"
-    ></toast>
-    <loading :show="loading" text="正在努力加载"></loading>
+    <template v-if="session.ready">
+      <router-view />
+    </template>
+
+    <div v-else-if="session.state === 'error'" class="weui-msg login-error">
+      <div class="weui-msg__icon-area">
+        <i class="weui-icon_msg weui-icon-warn"></i>
+      </div>
+      <div class="weui-msg__text-area">
+        <h2 class="weui-msg__title">登录失败</h2>
+        <p class="weui-msg__desc">{{ session.error }}</p>
+      </div>
+      <div class="weui-msg__opr-area">
+        <p class="weui-btn-area">
+          <VuxButton type="primary" @click="retry">重新登录</VuxButton>
+        </p>
+      </div>
+    </div>
+
+    <div v-else class="weui-loading_toast vux-loading">
+      <div class="weui-mask_transparent"></div>
+      <div class="weui-toast">
+        <i class="weui-loading weui-icon_toast"></i>
+        <p class="weui-toast__content">正在登录...</p>
+      </div>
+    </div>
+
+    <VuxToast
+      :show="ui.toast.show"
+      :text="ui.toast.text"
+      :position="ui.toast.position"
+      mask
+    />
+    <VuxLoading :show="ui.loading" text="正在努力加载" />
   </div>
 </template>
 
-<script>
-import { Toast, Loading } from 'vux'
-import * as dd from 'dingtalk-jsapi'
-import axios from 'axios'
-import store from './store'
+<script setup lang="ts">
+import { onMounted } from 'vue'
 
-export default {
-  name: 'app',
-  components: {
-    Toast, Loading
-  },
-  computed: {
-    toast () {
-      return this.$store.state.toast
-    },
-    loading () {
-      return this.$store.state.loading
-    }
-  },
-  async created () {
-    let USER_URL = process.env.USER_URL
-    await (() => {
-      return new Promise(async (resolve, reject) => {
-        if (!store.state.loggedin) {
-          const response = await axios.get(USER_URL)
-          if (response.data.status === 200) {
-            store.state.loggedin = true
-            resolve()
-          } else if (response.data.status === 403) {
-            dd.ready(() => {
-              dd.runtime.permission.requestAuthCode({
-                corpId: findGetParameter('corpId'),
-                onSuccess: async (info) => {
-                  localStorage.setItem('user-token', info.code)
-                  const response2 = await axios.post(USER_URL)
-                  if (response2.data.status !== 200) {
-                    reject(Error('login failed'))
-                  } else {
-                    resolve()
-                  }
-                }
-              })
-            })
-          }
-        } else {
-          resolve()
-        }
-      })
-    })()
-    this.$store.commit('initAnnouncements')
-    this.$store.commit('getCampus')
-    this.$store.commit('getDates')
-    this.$store.commit('getWorkingRecord')
-  }
+import VuxButton from '@/components/ui/VuxButton.vue'
+import VuxLoading from '@/components/ui/VuxLoading.vue'
+import VuxToast from '@/components/ui/VuxToast.vue'
+import { useCatalogStore } from '@/stores/catalog'
+import { useSessionStore } from '@/stores/session'
+import { useTicketsStore } from '@/stores/tickets'
+import { useUiStore } from '@/stores/ui'
+
+const session = useSessionStore()
+const catalog = useCatalogStore()
+const tickets = useTicketsStore()
+const ui = useUiStore()
+
+async function boot(): Promise<void> {
+  const ok = await session.ensure()
+  if (!ok) return
+  await Promise.allSettled([catalog.ensure(), tickets.refreshWorking()])
 }
 
-function findGetParameter (parameterName) {
-  let result = null
-  let tmp = []
-  console.log(location.search)
-  location.search.substr(1).split('&').forEach(function (item) {
-    tmp = item.split('=')
-    if (tmp[0] === parameterName) {
-      result = decodeURIComponent(tmp[1])
-    }
-  })
-  return result
+async function retry(): Promise<void> {
+  await boot()
 }
+
+onMounted(boot)
 </script>
-
-<style lang="less">
-@import "~vux/src/styles/reset.less";
-
-body {
-  background-color: #fbf9fe;
-}
-</style>

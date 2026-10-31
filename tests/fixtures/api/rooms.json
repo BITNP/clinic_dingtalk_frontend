@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "北区医务室",
+      "address": "北区 3 号楼 101",
+      "enabled": true
+    },
+    {
+      "id": 2,
+      "name": "南区学生服务中心",
+      "address": "南区 2 号楼 204",
+      "enabled": true
+    }
+  ],
+  "total": 2,
+  "page": 1,
+  "pageSize": 100
+}

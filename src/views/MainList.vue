@@ -1,129 +1,83 @@
 <template>
   <div class="page">
     <div class="page-header">
-      <tab>
-        <tab-item
-          v-for="(tabTitle, index) in tabTitles"
-          :key="index"
-          @on-item-click="switchTab"
-          :selected="index == tabNum"
-        >{{tabTitle.title}}</tab-item>
-      </tab>
+      <div class="vux-tab-wrap">
+        <div class="vux-tab-container">
+          <div class="vux-tab">
+            <div
+              v-for="(tab, index) in tabs"
+              :key="tab.name"
+              class="vux-tab-item"
+              :class="{ 'vux-tab-selected': index === tabNum }"
+              @click="switchTab(index)"
+            >
+              {{ tab.title }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div style=";width:100%;">
-      <tab></tab>
-    </div>
+
+    <div class="tab-spacer"></div>
+
     <div class="page-content">
-      <TopAnnouncements></TopAnnouncements>
-      <router-view></router-view>
+      <TopAnnouncements />
+      <router-view />
       <Footer />
     </div>
 
-    <div v-if="!hasOne">
-      <Box gap="10px 10px">
-        <x-button></x-button>
-      </Box>
-    </div>
-    <div class="page-footer" v-if="!hasOne">
-      <Box gap="10px 10px">
-        <x-button type="primary" action-type="button" link="/new">新建工单</x-button>
-      </Box>
+    <div v-if="showNewButton" class="page-footer">
+      <div style="margin: 10px">
+        <VuxButton type="primary" @click="goNew">新建工单</VuxButton>
+      </div>
     </div>
   </div>
 </template>
 
-<script>
-import {
-  Tab,
-  TabItem,
-  Card,
-  XButton,
-  Box
-} from 'vux'
-import TopAnnouncements from '@/components/TopAnnouncements'
-import Footer from '@/components/Footer'
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-export default {
-  components: {
-    Tab,
-    TabItem,
-    Card,
-    XButton,
-    Box,
-    TopAnnouncements,
-    Footer
-  },
-  data: () => ({
-    tabTitles: [
-      { title: '公告', to: {name: 'announcements'} },
-      { title: '诊所服务日历', to: {name: 'calendar'} },
-      { title: '正在处理', to: {name: 'working'} },
-      { title: '已处理', to: {name: 'finish'} }
-    ],
-    tabNum: 0,
-    display: false,
-    record: {
-      campus: '',
-      appointment_time: new Date().toISOString().substr(0, 10)
-    }
-    // record_index: -1
-  }),
-  computed: {
-    hasOne () {
-      return this.working_record === null
-    }
-  },
-  methods: {
-    switchTab (index) {
-      if (this.tabNum === index) {
-        // 当前页面
-        return
-      }
-      this.tabNum = index
-      this.$router.push(this.tabTitles[index].to, () => {})
-    }
-  },
-  created () {
-    let name = this.$route.name
-    this.tabNum = this.tabTitles.map(v => v.to.name).indexOf(name)
-  },
-  mounted () {
-    this.record.campus = '良乡校区-图书馆'
-  }
+import Footer from '@/components/Footer.vue'
+import TopAnnouncements from '@/components/TopAnnouncements.vue'
+import VuxButton from '@/components/ui/VuxButton.vue'
+import { useTicketsStore } from '@/stores/tickets'
+
+interface TabItem {
+  title: string
+  name: 'announcements' | 'calendar' | 'working' | 'finish'
+}
+
+const tabs: TabItem[] = [
+  { title: '公告', name: 'announcements' },
+  { title: '诊所服务日历', name: 'calendar' },
+  { title: '正在处理', name: 'working' },
+  { title: '已处理', name: 'finish' }
+]
+
+const route = useRoute()
+const router = useRouter()
+const tickets = useTicketsStore()
+
+const tabNum = computed(() => {
+  const index = tabs.findIndex((tab) => tab.name === route.name)
+  return index >= 0 ? index : 0
+})
+
+const showNewButton = computed(() => tickets.workingLoaded && !tickets.hasWorking)
+
+function switchTab(index: number): void {
+  if (index === tabNum.value) return
+  router.push({ name: tabs[index].name })
+}
+
+function goNew(): void {
+  router.push({ name: 'record' })
 }
 </script>
 
-<style>
-html,
-body,
-.page {
-  height: 100%;
-}
-
-body {
-  overflow: wrap;
-}
-
-.page {
-  display: flex;
-  flex-direction: column;
-}
-.page-header {
-  position: fixed;
-  left: 0px;
-  top: 0px;
-  width: 100%;
-  z-index: 10;
-}
-.page-content {
-  margin-bottom: 42px;
-}
-.page-footer {
-  position: fixed;
-  left: 0px;
-  bottom: 0px;
-  width: 100%;
-  background-color: #fff;
-  z-index: 10;
+<style scoped>
+.tab-spacer {
+  height: 44px;
 }
 </style>

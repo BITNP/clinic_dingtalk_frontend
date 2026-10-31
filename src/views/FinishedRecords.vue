@@ -1,72 +1,62 @@
 <template>
   <div>
     <RecordPreview
-      v-for="(d,index) in records"
-      :key="index"
-      :record="d"
-      @edit-current-record="popup([d,index])"
-    ></RecordPreview>
-    <infinite-loading @infinite="loadMore" spinner="circles">
-      <template slot="no-results">
-        <div></div>
-      </template>
-      <template slot="no-more">
-        <div></div>
-      </template>
-    </infinite-loading>
+      v-for="record in tickets.finished"
+      :key="record.url"
+      :record="record"
+    />
+
+    <div ref="sentinel" class="infinite-sentinel"></div>
+
+    <div v-if="loading" class="infinite-loading">
+      <i class="weui-loading"></i> 加载中
+    </div>
+    <div v-else-if="error" class="infinite-loading" @click="loadMore">
+      加载失败，点击重试
+    </div>
   </div>
 </template>
 
-<script>
-import RecordPreview from '@/components/RecordPreview'
-import InfiniteLoading from 'vue-infinite-loading'
-export default {
-  components: {
-    RecordPreview,
-    InfiniteLoading
-  },
-  data: () => ({
-    next: undefined,
-    records: [],
-    WORKING_STATUS: [0, 1, 2, 4, 5],
-    FINISHED_STATUS: [3, 6, 7, 8]
-  }),
-  computed: {
-  },
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-  methods: {
-    initRecords () {
-      if (this.next === undefined) { this.next = this.Const + 'wechat/finish/' }
-    },
+import RecordPreview from '@/components/RecordPreview.vue'
+import { useTicketsStore } from '@/stores/tickets'
 
-    loadMore ($state) {
-      if ($state && !this.next) {
-        $state.complete()
-        return
-      }
-      this.$http
-        .get(this.next)
-        .then(({ data }) => {
-          if (typeof data === 'string') {
-            // 如果返回了string，表示服务端可能出现错误
-            this.$store.commit('popError', 'Oops! 我们的服务器出现了一些问题')
-            return
-          }
-          this.records = this.records.concat(data.results)
-          this.next = data.next
-          if ($state && this.next) {
-            $state.loaded()
-          } else if ($state) {
-            $state.complete()
-          }
-        })
-    }
-  },
-  mounted () {
-    this.initRecords()
-  }
+const tickets = useTicketsStore()
+const sentinel = ref<HTMLElement | null>(null)
+const loading = ref(false)
+const error = ref(false)
+
+let observer: IntersectionObserver | undefined
+
+async function loadMore(): Promise<void> {
+  if (loading.value) return
+  // The store starts with total=0, so allow the first page explicitly.
+  if (tickets.finishedPage > 0 && !tickets.hasMoreFinished) return
+  loading.value = true
+  error.value = false
+
+  const ok = await tickets.loadFinishedPage(tickets.finishedPage + 1)
+  loading.value = false
+  error.value = !ok
 }
-</script>
 
-<style>
-</style>
+onMounted(() => {
+  tickets.resetFinished()
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0]?.isIntersecting) {
+        void loadMore()
+      }
+    },
+    { rootMargin: '200px' }
+  )
+  if (sentinel.value) observer.observe(sentinel.value)
+  void loadMore()
+})
+
+onBeforeUnmount(() => {
+  observer?.disconnect()
+})
+</script>

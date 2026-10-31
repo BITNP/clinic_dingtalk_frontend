@@ -1,98 +1,88 @@
 <template>
   <div>
-    <x-header>新建工单</x-header>
-    <RecordForm v-model="record" :create="true" />
+    <VuxHeader title="新建工单" />
+    <RecordForm v-model="draft" :create="true" />
     <br />
-    <check-icon :value.sync="agree">
+    <VuxCheckIcon v-model="agree">
       我已阅读并同意
-      <a @click="toc = true" style="color: blue;">免责声明</a> 中的内容
-    </check-icon>
+      <a style="color: blue" @click.stop="toc = true">免责声明</a>
+      中的内容
+    </VuxCheckIcon>
 
     <br />
-    <box gap="10px 10px">
-      <x-button type="primary" @click.native="submit">提交</x-button>
-    </box>
-    <TOS v-model="toc" @toggle-toc="toc = false" />
+    <div style="margin: 10px">
+      <VuxButton type="primary" :loading="tickets.submitting" @click="submit">
+        提交
+      </VuxButton>
+    </div>
+
+    <TOS v-model="toc" />
   </div>
 </template>
 
-<script>
-import RecordForm from '@/components/RecordForm'
-import TOS from '@/components/TOS'
-import { XHeader, XButton, Toast, Box, CheckIcon } from 'vux'
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
-export default {
-  props: ['display'],
-  model: {
-    prop: 'display',
-    event: 'change'
-  },
-  components: {
-    RecordForm,
-    XHeader,
-    XButton,
-    Toast,
-    Box,
-    CheckIcon,
-    TOS
-  },
-  data: () => ({
-    agree: false,
-    toc: false,
-    dates: [],
-    record: {
-      campus: ''
-    }
-  }),
-  methods: {
-    submit () {
-      if (
-        !(
-          this.record.campus &&
-          this.record.appointment_time &&
-          this.record.description &&
-          this.record.realname &&
-          this.record.phone_num
-        )
-      ) {
-        this.$store.commit('popError', '有必填项仍未填完')
-        return
-      }
-      if (this.agree === false) {
-        this.$store.commit('popError', '请在提交前先阅读并同意我们的免责声明')
-        return
-      }
-      this.axios
-        .post(this.Const + 'wechat/', {
-          ...this.record
-        })
-        .then(({ data }) => {
-          this.$router.push('/success')
-        })
-        .catch(({ response }) => {
-          if (
-            response &&
-            response.data && typeof (response.data) === 'object'
-          ) {
-            this.$store.commit('popError', response.data[Object.keys(response.data)[0]])
-          } else {
-            this.$store.commit('popError', 'Oops! 我们遇到了一些技术问题')
-          }
-        })
+import type { TicketDraft } from '@/api/types'
+import RecordForm from '@/components/RecordForm.vue'
+import TOS from '@/components/TOS.vue'
+import VuxButton from '@/components/ui/VuxButton.vue'
+import VuxCheckIcon from '@/components/ui/VuxCheckIcon.vue'
+import VuxHeader from '@/components/ui/VuxHeader.vue'
+import { validateDraft } from '@/domain/ticket'
+import { useCatalogStore } from '@/stores/catalog'
+import { useTicketsStore } from '@/stores/tickets'
+import { useUiStore } from '@/stores/ui'
+
+const router = useRouter()
+const catalog = useCatalogStore()
+const tickets = useTicketsStore()
+const ui = useUiStore()
+
+const agree = ref(false)
+const toc = ref(false)
+const draft = ref<TicketDraft>({
+  campus: '',
+  appointment_time: '',
+  description: '',
+  realname: '',
+  phone_num: '',
+  model: '',
+  password: ''
+})
+
+watch(
+  () => catalog.rooms,
+  (rooms) => {
+    if (!draft.value.campus && rooms.length > 0) {
+      draft.value = { ...draft.value, campus: rooms[0].name }
     }
   },
-  computed: {
-    campus () {
-      return this.$store.state.campus
-    }
-  },
-  mounted () {
-    if (this.campus && this.campus.length > 0) {
-      this.record.campus = this.$store.state.campus[0].name
-    }
+  { immediate: true }
+)
+
+async function submit(): Promise<void> {
+  if (tickets.submitting) return
+
+  const message = validateDraft(draft.value)
+  if (message) {
+    ui.error(message)
+    return
+  }
+
+  if (!agree.value) {
+    ui.error('请在提交前先阅读并同意我们的免责声明')
+    return
+  }
+
+  const ok = await tickets.createTicket(draft.value)
+  if (ok) {
+    router.push({ name: 'success' })
   }
 }
-</script>
 
-<style>
-</style>
+onMounted(() => {
+  void catalog.ensure()
+})
+</script>

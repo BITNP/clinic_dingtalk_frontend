@@ -1,114 +1,94 @@
 <template>
   <div>
-    <popup-header title="编辑当前工单"></popup-header>
-    <card>
-      <div slot="content">
-        <RecordFrom v-model="record" :create="create" />
-        <br />
+    <div class="vux-popup-header vux-1px-b">
+      <div class="vux-popup-header-left"></div>
+      <div class="vux-popup-header-title">编辑当前工单</div>
+      <div class="vux-popup-header-right"></div>
+    </div>
+
+    <div class="weui-panel weui-panel_access">
+      <div class="weui-panel__bd">
+        <div class="vux-card-content">
+          <RecordForm v-model="draft" :create="false" />
+          <br />
+        </div>
       </div>
 
-      <div slot="footer">
-        <box gap="10px 10px">
-          <x-button type="primary" @click.native="update">更新</x-button>
+      <div class="weui-panel__ft"></div>
 
-          <x-button type="warn" @click.native="toggleDelete" v-if="delete_confirm == false">删除</x-button>
-          <template v-else>
-            <br />
+      <div style="margin: 10px">
+        <VuxButton
+          type="primary"
+          :loading="tickets.submitting"
+          @click="update"
+        >
+          更新
+        </VuxButton>
 
-            <flexbox>
-              <flexbox-item>
-                <x-button type="default" @click.native="toggleDelete">取消</x-button>
-              </flexbox-item>
-              <flexbox-item>
-                <x-button type="warn" @click.native="onDelete">确认删除</x-button>
-              </flexbox-item>
-            </flexbox>
-          </template>
-        </box>
+        <template v-if="!deleteConfirm">
+          <VuxButton
+            type="warn"
+            :disabled="tickets.submitting"
+            @click="deleteConfirm = true"
+          >
+            删除
+          </VuxButton>
+        </template>
+        <template v-else>
+          <br />
+          <div class="vux-flexbox">
+            <div class="vux-flexbox-item">
+              <VuxButton type="default" @click="deleteConfirm = false">取消</VuxButton>
+            </div>
+            <div class="vux-flexbox-item" style="margin-left: 8px">
+              <VuxButton type="warn" @click="remove">确认删除</VuxButton>
+            </div>
+          </div>
+        </template>
 
         <br />
       </div>
-    </card>
+    </div>
   </div>
 </template>
 
-<script>
-import {
-  Card,
-  XButton,
-  // XDialog,
-  Flexbox,
-  FlexboxItem,
-  PopupHeader,
-  Box
-} from 'vux'
+<script setup lang="ts">
+import { ref } from 'vue'
 
-import RecordFrom from './RecordForm'
+import type { Ticket } from '@/api/types'
+import RecordForm from '@/components/RecordForm.vue'
+import VuxButton from '@/components/ui/VuxButton.vue'
+import { ticketToDraft, validateDraft } from '@/domain/ticket'
+import { useTicketsStore } from '@/stores/tickets'
+import { useUiStore } from '@/stores/ui'
 
-export default {
-  components: {
-    Card,
-    XButton,
-    // XDialog,
-    Flexbox,
-    FlexboxItem,
-    PopupHeader,
-    RecordFrom,
-    Box
-  },
-  data: () => ({
-    delete_confirm: false
-  }),
-  methods: {
-    toggleDelete (event) {
-      this.delete_confirm = !this.delete_confirm
-      return false
-    },
-    onDelete (event) {
-      this.axios
-        .delete(this.fixUrl(this.$props.record.url))
-        .then(({data, statusCode}) => {
-          this.$router.push({
-            name: 'success',
-            params: {
-              title: '已成功删除工单'
-            }
-          })
-          this.$store.commit('getWorkingRecord')
-        })
-    },
-    update () {
-      let record = { ...this.$props.record }
-      let _record = {}
-      for (const key in record) {
-        if (record[key]) {
-          _record[key] = record[key]
-        }
-      }
-      this.axios
-        .put(this.fixUrl(this.$props.record.url), { ..._record })
-        .then(() => {
-          this.$store.commit('popSuccess', '更新成功')
-        })
-        .catch((e) => {
-          this.$store.commit('popError', 'Oops! 我们遇到了一些技术问题')
-        })
-    },
-    fixUrl (url) {
-      let res = url.match(/\/\d+\//)
-      res = res[res.length - 1]
-      res = res.slice(1, res.length - 1)
-      let pk = parseInt(res)
-      return `${this.Const}wechat/${pk}/`
-    }
-  },
-  props: ['record', 'create'],
-  model: {
-    prop: 'record', // 绑定的值，通过父组件传递
-    event: 'update' // 自定义事件名
+const props = defineProps<{
+  ticket: Ticket
+}>()
+
+const emit = defineEmits<{
+  deleted: []
+}>()
+
+const tickets = useTicketsStore()
+const ui = useUiStore()
+const draft = ref(ticketToDraft(props.ticket))
+const deleteConfirm = ref(false)
+
+async function update(): Promise<void> {
+  const message = validateDraft(draft.value)
+  if (message) {
+    ui.error(message)
+    return
+  }
+
+  await tickets.updateTicket(props.ticket, draft.value)
+}
+
+async function remove(): Promise<void> {
+  const ok = await tickets.deleteTicket(props.ticket)
+  if (ok) {
+    emit('deleted')
   }
 }
 </script>
-
-<style>
-</style>

@@ -35,7 +35,10 @@
 - [x] Fix `clinic_proxy_dingtalk/Program.cs` so `username` is appended with
   `&` when the target URL already has a query string.
 - [x] Apply the same helper to GET/POST/PUT/DELETE.
-- [x] Add a unit test for the URL builder.
+- [x] Extract `ProxyUrlBuilder.Build()` so it can be tested independently.
+- [ ] Add a .NET test project when the SDK is available in the deployment/CI
+  environment. The .NET SDK is not installed in the current workspace, so the
+  proxy change could not be compiled here.
 
 ### Stage 2 — Toolchain and app shell
 

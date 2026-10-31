@@ -16,6 +16,11 @@ export interface DateOption {
   weekday: string
 }
 
+export interface ServiceDateOption extends DateOption {
+  startLabel: string
+  endLabel: string
+}
+
 export function joinServiceDates(dates: ServiceDate[], rooms: Room[]): ServiceDateWithRoom[] {
   const roomsById = new Map(rooms.map((room) => [room.id, room]))
 

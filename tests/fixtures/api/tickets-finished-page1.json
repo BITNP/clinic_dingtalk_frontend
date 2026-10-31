@@ -1,0 +1,37 @@
+{
+  "items": [
+    {
+      "url": "/api/tickets/41",
+      "user": "student01",
+      "status": "completed",
+      "realname": "张三",
+      "phone_num": "13800000000",
+      "campus": "北区医务室",
+      "appointment_time": "2026-10-20",
+      "description": "屏幕闪烁。",
+      "worker_description": "排线松动，已重新固定。",
+      "model": "ThinkPad T14",
+      "reject_reason": "",
+      "password": "123456",
+      "liquid_metal_status": "non_liquid_metal"
+    },
+    {
+      "url": "/api/tickets/40",
+      "user": "student01",
+      "status": "rejected",
+      "realname": "张三",
+      "phone_num": "13800000000",
+      "campus": "南区学生服务中心",
+      "appointment_time": "2026-10-18",
+      "description": "系统无法启动。",
+      "worker_description": "",
+      "model": "Dell XPS 13",
+      "reject_reason": "预约时间不在服务时段",
+      "password": "",
+      "liquid_metal_status": "unknown"
+    }
+  ],
+  "total": 3,
+  "page": 1,
+  "pageSize": 2
+}

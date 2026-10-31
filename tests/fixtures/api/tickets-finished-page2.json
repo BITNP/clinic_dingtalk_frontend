@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "url": "/api/tickets/39",
+      "user": "student01",
+      "status": "referred",
+      "realname": "张三",
+      "phone_num": "13800000000",
+      "campus": "北区医务室",
+      "appointment_time": "2026-10-15",
+      "description": "主板进水。",
+      "worker_description": "需要主板级维修。",
+      "model": "MacBook Air",
+      "reject_reason": "",
+      "password": "",
+      "liquid_metal_status": "liquid_metal"
+    }
+  ],
+  "total": 3,
+  "page": 2,
+  "pageSize": 2
+}

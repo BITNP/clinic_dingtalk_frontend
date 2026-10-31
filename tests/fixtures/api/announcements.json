@@ -1,0 +1,43 @@
+{
+  "items": [
+    {
+      "id": 3,
+      "title": "国庆值班安排",
+      "content": "10 月 1 日暂停服务。\n\n请提前预约。",
+      "tag": "pinned",
+      "enabled": true,
+      "brief": "假期值班安排",
+      "createdTime": "2026-10-20T08:00:00+08:00",
+      "lastEditedTime": "2026-10-25T09:30:00+08:00",
+      "expireDate": "2026-12-31T00:00:00+08:00",
+      "priority": 10
+    },
+    {
+      "id": 2,
+      "title": "电脑诊所恢复正常服务",
+      "content": "本周起恢复正常服务，欢迎预约。",
+      "tag": "normal",
+      "enabled": true,
+      "brief": "恢复正常服务",
+      "createdTime": "2026-10-18T08:00:00+08:00",
+      "lastEditedTime": "2026-10-18T08:00:00+08:00",
+      "expireDate": "2026-12-31T00:00:00+08:00",
+      "priority": 0
+    },
+    {
+      "id": 1,
+      "title": "免责声明",
+      "content": "请妥善备份数据，电脑诊所为公益服务。",
+      "tag": "tos",
+      "enabled": true,
+      "brief": "服务免责声明",
+      "createdTime": "2026-09-01T08:00:00+08:00",
+      "lastEditedTime": "2026-09-01T08:00:00+08:00",
+      "expireDate": "2099-12-31T00:00:00+08:00",
+      "priority": 100
+    }
+  ],
+  "total": 3,
+  "page": 1,
+  "pageSize": 100
+}

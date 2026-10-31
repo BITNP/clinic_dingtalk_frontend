@@ -11,7 +11,14 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ['**/*.vue'],
-    extends: [...pluginVue.configs['flat/recommended']]
+    extends: [...pluginVue.configs['flat/recommended']],
+    languageOptions: {
+      parserOptions: {
+        parser: tseslint.parser,
+        extraFileExtensions: ['.vue'],
+        sourceType: 'module'
+      }
+    }
   },
   {
     files: ['**/*.{ts,vue}'],

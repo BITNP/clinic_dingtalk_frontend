@@ -1,6 +1,5 @@
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
-import 'vant/lib/index.css'
 
 import './style/main.css'
 import './dev'

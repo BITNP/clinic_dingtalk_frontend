@@ -24,17 +24,35 @@ export const api = axios.create({
   }
 })
 
+/**
+ * Axios adds `params` to the final URL after request interceptors run. The
+ * proxy receives the real path through the `url` header, so serialize the
+ * params here or filters such as `active=true` are silently dropped.
+ */
+export function buildRequestPath(config: {
+  url?: string
+  baseURL?: string
+  params?: unknown
+}): string {
+  return api.getUri({
+    ...config,
+    baseURL: config.baseURL ?? API_BASE
+  })
+}
+
 api.interceptors.request.use((config) => {
-  const requestPath = buildApiPath(config.url, config.baseURL)
+  const requestPath = buildRequestPath(config)
 
   config.headers = config.headers ?? new AxiosHeaders()
   config.headers.set('url', requestPath)
   config.headers.set('user-token', getToken())
 
   // The proxy endpoint is served from the frontend origin, so bypass the
-  // /api base URL when rewriting the request.
+  // /api base URL when rewriting the request. The query is already encoded in
+  // the `url` header.
   config.baseURL = ''
   config.url = PROXY_URL
+  config.params = undefined
   return config
 })
 

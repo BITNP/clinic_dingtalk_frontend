@@ -1,7 +1,8 @@
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 
-import './style/main.css'
+import './style/vux.css'
+import './style/legacy.css'
 import './dev'
 
 import App from './App.vue'

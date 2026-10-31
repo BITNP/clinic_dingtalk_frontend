@@ -1,30 +1,23 @@
 <template>
-  <div
-    v-if="current"
-    class="top-announcement"
-    role="button"
-    tabindex="0"
-    @click="openAnnouncements"
-    @keydown.enter="openAnnouncements"
-  >
-    <van-icon name="volume-o" />
+  <div>
     <transition name="switch" mode="out-in">
-      <span :key="current.id" class="top-announcement-text">
+      <div
+        v-if="current"
+        :key="current.id"
+        style="margin: 3px 10px; text-align: center"
+      >
         {{ current.brief || current.title }}
-      </span>
+      </div>
     </transition>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import { useCatalogStore } from '@/stores/catalog'
 
 const catalog = useCatalogStore()
-const router = useRouter()
-
 const index = ref(0)
 let timer: number | undefined
 
@@ -61,45 +54,4 @@ watch(
 
 onMounted(start)
 onBeforeUnmount(stop)
-
-function openAnnouncements(): void {
-  router.push({ name: 'announcements' })
-}
 </script>
-
-<style scoped>
-.top-announcement {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  margin: 10px 12px 2px;
-  overflow: hidden;
-  color: #8a5a00;
-  font-size: 13px;
-  background: #fff7e8;
-  border-radius: 999px;
-}
-
-.top-announcement-text {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.switch-enter-active,
-.switch-leave-active {
-  transition: all 0.4s ease;
-}
-
-.switch-enter-from {
-  opacity: 0;
-  transform: translateX(12px);
-}
-
-.switch-leave-to {
-  opacity: 0;
-  transform: translateX(-12px);
-}
-</style>

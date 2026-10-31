@@ -1,19 +1,35 @@
 <template>
   <div class="page">
     <div class="page-header">
-      <van-tabs :active="tabNum" shrink @change="onTabChange">
-        <van-tab v-for="tab in tabs" :key="tab.name" :title="tab.title" />
-      </van-tabs>
+      <div class="vux-tab-wrap">
+        <div class="vux-tab-container">
+          <div class="vux-tab">
+            <div
+              v-for="(tab, index) in tabs"
+              :key="tab.name"
+              class="vux-tab-item"
+              :class="{ 'vux-tab-selected': index === tabNum }"
+              @click="switchTab(index)"
+            >
+              {{ tab.title }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="page-content main-content">
+    <div class="tab-spacer"></div>
+
+    <div class="page-content">
       <TopAnnouncements />
       <router-view />
       <Footer />
     </div>
 
     <div v-if="showNewButton" class="page-footer">
-      <van-button type="primary" block round @click="goNew">新建工单</van-button>
+      <div style="margin: 10px">
+        <VuxButton type="primary" @click="goNew">新建工单</VuxButton>
+      </div>
     </div>
   </div>
 </template>
@@ -24,6 +40,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import Footer from '@/components/Footer.vue'
 import TopAnnouncements from '@/components/TopAnnouncements.vue'
+import VuxButton from '@/components/ui/VuxButton.vue'
 import { useTicketsStore } from '@/stores/tickets'
 
 interface TabItem {
@@ -49,9 +66,8 @@ const tabNum = computed(() => {
 
 const showNewButton = computed(() => tickets.workingLoaded && !tickets.hasWorking)
 
-function onTabChange(name: number | string): void {
-  const index = typeof name === 'number' ? name : tabs.findIndex((tab) => tab.title === name)
-  if (index < 0 || index === tabNum.value) return
+function switchTab(index: number): void {
+  if (index === tabNum.value) return
   router.push({ name: tabs[index].name })
 }
 
@@ -61,17 +77,7 @@ function goNew(): void {
 </script>
 
 <style scoped>
-.page-header {
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: 10;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-}
-
-.main-content {
-  padding-top: 52px;
+.tab-spacer {
+  height: 44px;
 }
 </style>

@@ -1,34 +1,54 @@
 <template>
-  <div class="popup-content">
-    <van-nav-bar title="编辑当前工单" left-arrow @click-left="emit('cancel')" />
-
-    <div class="popup-body">
-      <RecordForm v-model="draft" :create="false" />
+  <div>
+    <div class="vux-popup-header vux-1px-b">
+      <div class="vux-popup-header-left"></div>
+      <div class="vux-popup-header-title">编辑当前工单</div>
+      <div class="vux-popup-header-right"></div>
     </div>
 
-    <div class="popup-actions">
-      <van-button type="primary" block round :loading="tickets.submitting" @click="save">
-        更新
-      </van-button>
-      <van-button
-        type="danger"
-        block
-        round
-        plain
-        :disabled="tickets.submitting"
-        @click="confirmDelete = true"
-      >
-        删除工单
-      </van-button>
-    </div>
+    <div class="weui-panel weui-panel_access">
+      <div class="weui-panel__bd">
+        <div class="vux-card-content">
+          <RecordForm v-model="draft" :create="false" />
+          <br />
+        </div>
+      </div>
 
-    <van-dialog
-      v-model:show="confirmDelete"
-      title="确认删除"
-      message="删除后无法恢复，确定要删除这张工单吗？"
-      show-cancel-button
-      @confirm="remove"
-    />
+      <div class="weui-panel__ft"></div>
+
+      <div style="margin: 10px">
+        <VuxButton
+          type="primary"
+          :loading="tickets.submitting"
+          @click="update"
+        >
+          更新
+        </VuxButton>
+
+        <template v-if="!deleteConfirm">
+          <VuxButton
+            type="warn"
+            :disabled="tickets.submitting"
+            @click="deleteConfirm = true"
+          >
+            删除
+          </VuxButton>
+        </template>
+        <template v-else>
+          <br />
+          <div class="vux-flexbox">
+            <div class="vux-flexbox-item">
+              <VuxButton type="default" @click="deleteConfirm = false">取消</VuxButton>
+            </div>
+            <div class="vux-flexbox-item" style="margin-left: 8px">
+              <VuxButton type="warn" @click="remove">确认删除</VuxButton>
+            </div>
+          </div>
+        </template>
+
+        <br />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -37,7 +57,8 @@ import { ref } from 'vue'
 
 import type { Ticket } from '@/api/types'
 import RecordForm from '@/components/RecordForm.vue'
-import { validateDraft, ticketToDraft } from '@/domain/ticket'
+import VuxButton from '@/components/ui/VuxButton.vue'
+import { ticketToDraft, validateDraft } from '@/domain/ticket'
 import { useTicketsStore } from '@/stores/tickets'
 import { useUiStore } from '@/stores/ui'
 
@@ -46,27 +67,22 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  saved: []
   deleted: []
-  cancel: []
 }>()
 
 const tickets = useTicketsStore()
 const ui = useUiStore()
 const draft = ref(ticketToDraft(props.ticket))
-const confirmDelete = ref(false)
+const deleteConfirm = ref(false)
 
-async function save(): Promise<void> {
+async function update(): Promise<void> {
   const message = validateDraft(draft.value)
   if (message) {
     ui.error(message)
     return
   }
 
-  const ok = await tickets.updateTicket(props.ticket, draft.value)
-  if (ok) {
-    emit('saved')
-  }
+  await tickets.updateTicket(props.ticket, draft.value)
 }
 
 async function remove(): Promise<void> {
@@ -76,27 +92,3 @@ async function remove(): Promise<void> {
   }
 }
 </script>
-
-<style scoped>
-.popup-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: var(--clinic-bg);
-}
-
-.popup-body {
-  flex: 1;
-  padding: 12px 0;
-  overflow-y: auto;
-}
-
-.popup-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  background: #fff;
-  border-top: 1px solid var(--clinic-border);
-}
-</style>

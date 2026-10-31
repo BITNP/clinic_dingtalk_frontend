@@ -1,100 +1,89 @@
 <template>
   <div>
-    <van-cell-group inset class="announcement-list">
-      <van-cell
-        v-for="item in catalog.announcementList"
-        :key="item.id"
-        :title="item.title"
-        :label="`[${tagLabel(item.tag)}] ${item.brief}`"
-        is-link
-        @click="open(item)"
-      />
-    </van-cell-group>
+    <div class="weui-panel weui-panel_access">
+      <div class="weui-panel__hd">请点击以查看具体内容</div>
+      <div class="weui-panel__bd">
+        <div
+          v-for="item in orderedAnnouncements"
+          :key="item.id"
+          class="weui-media-box weui-media-box_text"
+          @click="clickItem(item)"
+        >
+          <h4 class="weui-media-box__title">{{ item.title }}</h4>
+          <p class="weui-media-box__desc">
+            [{{ tagLabel(item.tag) }}] {{ item.brief }}
+          </p>
+        </div>
+      </div>
+      <div class="weui-panel__ft"></div>
+    </div>
 
-    <van-empty v-if="!catalog.announcementList.length && !catalog.loading" description="暂无公告" />
+    <br />
 
-    <van-popup v-model:show="showPopup" position="right" :style="{ width: '100%', height: '100%' }">
-      <div v-if="selected" class="announcement-popup">
-        <van-nav-bar :title="selected.title" left-arrow @click-left="showPopup = false" />
-
-        <div class="announcement-meta">
-          <van-tag :type="tagType(selected.tag) || undefined">
-            {{ tagLabel(selected.tag) }}
-          </van-tag>
-          <span class="muted">{{ formatDateTime(selected.lastEditedTime) }}</span>
+    <VuxPopup v-model:show="showpopup" position="right" width="100%">
+      <div v-if="selected" style="z-index: 999; margin: 10px">
+        <div class="weui-cells vux-no-group-title">
+          <div class="weui-cell cell-grey">
+            <div class="weui-cell__bd">
+              <p><label class="vux-label">标题</label></p>
+            </div>
+            <div class="weui-cell__ft">{{ selected.title }}</div>
+          </div>
+          <div class="weui-cell cell-grey">
+            <div class="weui-cell__bd">
+              <p><label class="vux-label">公告类型</label></p>
+            </div>
+            <div class="weui-cell__ft">{{ tagLabel(selected.tag) }}</div>
+          </div>
+          <div class="weui-cell cell-grey">
+            <div class="weui-cell__bd">
+              <p><label class="vux-label">最后修改时间</label></p>
+            </div>
+            <div class="weui-cell__ft">{{ formatDateTime(selected.lastEditedTime) }}</div>
+          </div>
         </div>
 
-        <div class="announcement-body">
+        <div class="card-padding">
           <MarkdownContent :source="selected.content" />
         </div>
 
-        <div class="announcement-actions">
-          <van-button type="primary" block round @click="showPopup = false"> 确认 </van-button>
+        <div class="confirm-btn">
+          <VuxButton plain type="primary" @click="showpopup = false">确认</VuxButton>
         </div>
       </div>
-    </van-popup>
+    </VuxPopup>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import type { Announcement } from '@/api/types'
 import MarkdownContent from '@/components/MarkdownContent.vue'
-import { announcementTagLabel, announcementTagType } from '@/domain/announcement'
+import VuxButton from '@/components/ui/VuxButton.vue'
+import VuxPopup from '@/components/ui/VuxPopup.vue'
+import { announcementTagLabel } from '@/domain/announcement'
 import { formatDateTime } from '@/domain/format'
 import { useCatalogStore } from '@/stores/catalog'
 
 const catalog = useCatalogStore()
-const showPopup = ref(false)
+const showpopup = ref(false)
 const selected = ref<Announcement | null>(null)
+
+const orderedAnnouncements = computed(() =>
+  [...catalog.announcementList].sort((a, b) => a.priority - b.priority)
+)
 
 function tagLabel(tag: string): string {
   return announcementTagLabel(tag)
 }
 
-function tagType(tag: string): 'primary' | 'warning' | 'success' | '' {
-  return announcementTagType(tag)
-}
-
-function open(item: Announcement): void {
+function clickItem(item: Announcement): void {
   selected.value = item
-  showPopup.value = true
+  showpopup.value = true
 }
 
 onMounted(() => {
   void catalog.ensure()
 })
 </script>
-
-<style scoped>
-.announcement-list {
-  margin-top: 12px;
-}
-
-.announcement-popup {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: #fff;
-}
-
-.announcement-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--clinic-border);
-}
-
-.announcement-body {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-}
-
-.announcement-actions {
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--clinic-border);
-}
-</style>

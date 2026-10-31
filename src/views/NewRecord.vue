@@ -1,33 +1,22 @@
 <template>
-  <div class="page">
-    <van-nav-bar title="新建工单" left-arrow @click-left="goHome" />
+  <div>
+    <VuxHeader title="新建工单" />
+    <RecordForm v-model="draft" :create="true" />
+    <br />
+    <VuxCheckIcon v-model="agree">
+      我已阅读并同意
+      <a style="color: blue" @click.stop="toc = true">免责声明</a>
+      中的内容
+    </VuxCheckIcon>
 
-    <div class="form-page">
-      <RecordForm v-model="draft" :create="true" />
-
-      <div class="agreement">
-        <van-checkbox v-model="agree" icon-size="18px">
-          我已阅读并同意
-          <a @click.stop="toc = true">免责声明</a>
-          中的内容
-        </van-checkbox>
-      </div>
-
-      <div class="submit-bar">
-        <van-button
-          type="primary"
-          block
-          round
-          :loading="tickets.submitting"
-          :disabled="tickets.submitting"
-          @click="submit"
-        >
-          提交
-        </van-button>
-      </div>
-
-      <TOS v-model:show="toc" />
+    <br />
+    <div style="margin: 10px">
+      <VuxButton type="primary" :loading="tickets.submitting" @click="submit">
+        提交
+      </VuxButton>
     </div>
+
+    <TOS v-model="toc" />
   </div>
 </template>
 
@@ -38,6 +27,9 @@ import { useRouter } from 'vue-router'
 import type { TicketDraft } from '@/api/types'
 import RecordForm from '@/components/RecordForm.vue'
 import TOS from '@/components/TOS.vue'
+import VuxButton from '@/components/ui/VuxButton.vue'
+import VuxCheckIcon from '@/components/ui/VuxCheckIcon.vue'
+import VuxHeader from '@/components/ui/VuxHeader.vue'
 import { validateDraft } from '@/domain/ticket'
 import { useCatalogStore } from '@/stores/catalog'
 import { useTicketsStore } from '@/stores/tickets'
@@ -50,7 +42,6 @@ const ui = useUiStore()
 
 const agree = ref(false)
 const toc = ref(false)
-
 const draft = ref<TicketDraft>({
   campus: '',
   appointment_time: '',
@@ -91,26 +82,7 @@ async function submit(): Promise<void> {
   }
 }
 
-function goHome(): void {
-  router.push({ name: 'home' })
-}
-
 onMounted(() => {
   void catalog.ensure()
 })
 </script>
-
-<style scoped>
-.form-page {
-  padding: 12px 0 calc(24px + env(safe-area-inset-bottom));
-}
-
-.agreement {
-  padding: 16px;
-  font-size: 13px;
-}
-
-.submit-bar {
-  padding: 8px 16px;
-}
-</style>

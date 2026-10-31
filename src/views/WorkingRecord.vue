@@ -1,22 +1,14 @@
 <template>
-  <div>
-    <RecordPreview v-if="ticket" :record="ticket" editable @edit="display = true" />
+  <div v-if="ticket">
+    <RecordPreview :record="ticket" @edit="display = true" />
 
-    <van-empty v-else-if="tickets.workingLoaded" description="当前没有正在处理的工单" />
-
-    <div v-else class="loading-state">
-      <van-loading vertical>正在加载...</van-loading>
-    </div>
-
-    <van-popup v-model:show="display" position="bottom" round :style="{ height: '92%' }">
+    <VuxPopup v-model:show="display">
       <PopupContent
-        v-if="display && ticket"
+        v-if="display"
         :ticket="ticket"
-        @saved="display = false"
         @deleted="onDeleted"
-        @cancel="display = false"
       />
-    </van-popup>
+    </VuxPopup>
   </div>
 </template>
 
@@ -26,6 +18,7 @@ import { useRouter } from 'vue-router'
 
 import PopupContent from '@/components/PopupContent.vue'
 import RecordPreview from '@/components/RecordPreview.vue'
+import VuxPopup from '@/components/ui/VuxPopup.vue'
 import { useTicketsStore } from '@/stores/tickets'
 
 const tickets = useTicketsStore()
@@ -43,11 +36,3 @@ onMounted(() => {
   void tickets.refreshWorking()
 })
 </script>
-
-<style scoped>
-.loading-state {
-  display: flex;
-  justify-content: center;
-  padding: 64px 0;
-}
-</style>

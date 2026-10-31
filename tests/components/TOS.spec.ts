@@ -10,7 +10,7 @@ beforeEach(() => {
 })
 
 describe('TOS popup', () => {
-  it('emits update:show instead of mutating the prop', async () => {
+  it('emits the model update instead of mutating the prop', async () => {
     const catalog = useCatalogStore()
     catalog.announcements = [
       {
@@ -29,15 +29,20 @@ describe('TOS popup', () => {
 
     const wrapper = mount(TOS, {
       props: {
-        show: true,
-        'onUpdate:show': vi.fn()
+        modelValue: true,
+        'onUpdate:modelValue': vi.fn()
+      },
+      global: {
+        stubs: {
+          teleport: true
+        }
       }
     })
 
-    const close = wrapper.find('.van-icon-cross')
-    expect(close.exists()).toBe(true)
+    const button = wrapper.find('button.weui-btn')
+    expect(button.exists()).toBe(true)
 
-    await close.trigger('click')
-    expect(wrapper.emitted('update:show')?.[0]).toEqual([false])
+    await button.trigger('click')
+    expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false])
   })
 })

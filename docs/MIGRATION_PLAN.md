@@ -16,7 +16,7 @@
 | Language | TypeScript (strict) |
 | State | Pinia |
 | Router | Vue Router 4, hash history |
-| UI | Vant 4 |
+| UI | Original VUX/WeUI visual design, ported to Vue 3 components |
 | HTTP | axios 1.x |
 | Markdown | markdown-it + DOMPurify |
 | Tests | Vitest + Vue Test Utils |
@@ -42,7 +42,7 @@
 
 ### Stage 2 — Toolchain and app shell
 
-- [x] Vite + Vue 3 + TypeScript + Pinia + Vue Router + Vant.
+- [x] Vite + Vue 3 + TypeScript + Pinia + Vue Router, preserving the original VUX/WeUI UI.
 - [x] ESLint/Prettier/Vitest scripts.
 - [x] Dev proxy middleware reusing `proxySim`.
 - [x] Remove webpack, Babel 6, VUX, and the old build config.

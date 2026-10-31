@@ -28,11 +28,11 @@ export function buildPreviewItems(ticket: Ticket): PreviewItem[] {
 
   const fields: Array<[keyof Ticket, string]> = [
     ['appointment_time', '预约时间'],
-    ['campus', '校区'],
-    ['realname', '真实姓名'],
-    ['phone_num', '手机号'],
-    ['model', '电脑型号'],
     ['description', '问题描述'],
+    ['model', '电脑型号'],
+    ['campus', '校区'],
+    ['phone_num', '手机号'],
+    ['realname', '真实姓名'],
     ['worker_description', '工作人员说明'],
     ['reject_reason', '驳回原因']
   ]

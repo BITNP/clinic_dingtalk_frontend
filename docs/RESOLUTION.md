@@ -30,7 +30,7 @@
 | DT-021 | Fixed | Old webpack/VUX files and dead view code were deleted; invalid CSS, unused props, empty button block, `console.log`, and dead status entries are gone. |
 | DT-022 | Fixed | `README.md` now documents the new API, stack, Node 20, dev proxy, browser support, deployment, and related projects. |
 | DT-023 | Fixed | `validateDraft()` requires `^1[3-9]\d{9}$` before submit; covered by `tests/domain/ticket.spec.ts`. |
-| DT-024 | Fixed | Route-level lazy loading and Vant on-demand imports; bundle check enforces 300 KiB per chunk / 700 KiB total gzip. 48 Vitest tests cover the regression-prone paths. |
+| DT-024 | Fixed | Route-level lazy loading; bundle check enforces 300 KiB per chunk / 700 KiB total gzip. 48 Vitest tests cover the regression-prone paths. |
 
 ## Smoke test
 
@@ -45,6 +45,21 @@ Against the running local backend through `server/proxySim.ts`:
 - Create → get → update → delete for a throwaway user (`student99`) succeeded,
   including `204 No Content` on delete and `count: 0` from
   `/api/tickets/working` afterwards. The test record was deleted.
+
+## UI preservation
+
+- The original VUX/WeUI stylesheet and markup were recovered from the
+  pre-migration build and restored; Vant was removed.
+- Screenshots of the old and new home, calendar, new-record, working-record,
+  finished-record, and success pages were compared at 390×844. Layout, colors,
+  typography, tabs, cards, form rows, flow steps, and buttons match.
+- Expected differences only: announcement tags now render correct text instead
+  of `[undefined]`, the new-ticket button is hidden when a working ticket
+  exists, and the calendar shows “剩余” because the new API does not expose the
+  old “正在服务” count.
+- The API client now serializes axios `params` into the proxy `url` header;
+  without this, filters such as `active=true` were dropped and the catalog
+  loaded stale rows. Covered by `tests/api/client.spec.ts`.
 
 ## Notes
 

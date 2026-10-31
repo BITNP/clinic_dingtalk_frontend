@@ -23,7 +23,6 @@
     "dompurify": "^3.2.3",
     "markdown-it": "^14.1.0",
     "pinia": "^2.3.1",
-    "vant": "^4.9.15",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
@@ -43,7 +42,6 @@
     "terser": "^5.37.0",
     "typescript": "~5.6.3",
     "typescript-eslint": "^8.18.2",
-    "unplugin-vue-components": "^0.27.5",
     "vite": "^5.4.11",
     "vitest": "^2.1.8",
     "vue-tsc": "^2.1.10"

@@ -4,32 +4,45 @@
       <router-view />
     </template>
 
-    <div v-else-if="session.state === 'error'" class="boot-state">
-      <van-empty image="error" :description="session.error || '登录失败，请重试'" />
-      <van-button type="primary" round @click="retry">重新登录</van-button>
-    </div>
-
-    <div v-else class="boot-state">
-      <van-loading size="28" vertical>正在登录...</van-loading>
-    </div>
-
-    <van-toast
-      v-model:show="ui.toast.show"
-      :message="ui.toast.text"
-      :position="ui.toast.position"
-    />
-
-    <van-overlay :show="ui.loading" class="loading-overlay">
-      <div class="loading-wrap">
-        <van-loading vertical>正在加载...</van-loading>
+    <div v-else-if="session.state === 'error'" class="weui-msg login-error">
+      <div class="weui-msg__icon-area">
+        <i class="weui-icon_msg weui-icon-warn"></i>
       </div>
-    </van-overlay>
+      <div class="weui-msg__text-area">
+        <h2 class="weui-msg__title">登录失败</h2>
+        <p class="weui-msg__desc">{{ session.error }}</p>
+      </div>
+      <div class="weui-msg__opr-area">
+        <p class="weui-btn-area">
+          <VuxButton type="primary" @click="retry">重新登录</VuxButton>
+        </p>
+      </div>
+    </div>
+
+    <div v-else class="weui-loading_toast vux-loading">
+      <div class="weui-mask_transparent"></div>
+      <div class="weui-toast">
+        <i class="weui-loading weui-icon_toast"></i>
+        <p class="weui-toast__content">正在登录...</p>
+      </div>
+    </div>
+
+    <VuxToast
+      :show="ui.toast.show"
+      :text="ui.toast.text"
+      :position="ui.toast.position"
+      mask
+    />
+    <VuxLoading :show="ui.loading" text="正在努力加载" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
+import VuxButton from '@/components/ui/VuxButton.vue'
+import VuxLoading from '@/components/ui/VuxLoading.vue'
+import VuxToast from '@/components/ui/VuxToast.vue'
 import { useCatalogStore } from '@/stores/catalog'
 import { useSessionStore } from '@/stores/session'
 import { useTicketsStore } from '@/stores/tickets'
@@ -52,27 +65,3 @@ async function retry(): Promise<void> {
 
 onMounted(boot)
 </script>
-
-<style scoped>
-.boot-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 24px;
-  gap: 16px;
-}
-
-.loading-overlay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.loading-wrap {
-  padding: 20px 28px;
-  background: rgba(0, 0, 0, 0.72);
-  border-radius: 12px;
-}
-</style>

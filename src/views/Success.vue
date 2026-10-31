@@ -1,13 +1,22 @@
 <template>
-  <div class="page success-page">
-    <van-icon name="checked" size="72" color="#07c160" />
-
-    <h1 class="success-title">{{ title }}</h1>
-    <p class="success-description">网络开拓者协会 - 电脑诊所</p>
-
-    <van-button type="primary" block round class="success-button" @click="backHome">
-      返回首页
-    </van-button>
+  <div>
+    <br />
+    <br />
+    <br />
+    <div class="weui-msg">
+      <div class="weui-msg__icon-area">
+        <i class="weui-icon_msg weui-icon-success"></i>
+      </div>
+      <div class="weui-msg__text-area">
+        <h2 class="weui-msg__title">{{ title }}</h2>
+        <p class="weui-msg__desc">网络开拓者协会 - 电脑诊所</p>
+      </div>
+      <div class="weui-msg__opr-area">
+        <p class="weui-btn-area">
+          <VuxButton type="primary" @click="backHome">返回首页</VuxButton>
+        </p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -15,6 +24,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import VuxButton from '@/components/ui/VuxButton.vue'
 import { useTicketsStore } from '@/stores/tickets'
 
 const route = useRoute()
@@ -31,29 +41,3 @@ function backHome(): void {
   void tickets.refreshWorking()
 }
 </script>
-
-<style scoped>
-.success-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 28px;
-  text-align: center;
-}
-
-.success-title {
-  margin: 20px 0 8px;
-  font-size: 22px;
-}
-
-.success-description {
-  margin: 0;
-  color: var(--clinic-muted);
-  font-size: 14px;
-}
-
-.success-button {
-  margin-top: 40px;
-}
-</style>

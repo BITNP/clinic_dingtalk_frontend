@@ -11,10 +11,12 @@
 | 语言 | TypeScript（严格模式） |
 | 状态 | Pinia |
 | 路由 | Vue Router 4（hash 模式） |
-| UI | Vant 4 |
+| UI | Original VUX/WeUI visual design, ported to Vue 3 components |
 | HTTP | axios 1.x |
 | Markdown | markdown-it + DOMPurify |
 | 测试 | Vitest + Vue Test Utils |
+
+界面保持迁移前的 VUX/WeUI 视觉设计；组件交互已用 Vue 3 重写，Vant 不再使用。
 
 ## 后端
 

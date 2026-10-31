@@ -3,8 +3,6 @@ import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import legacy from '@vitejs/plugin-legacy'
 import { visualizer } from 'rollup-plugin-visualizer'
-import { VantResolver } from 'unplugin-vue-components/resolvers'
-import Components from 'unplugin-vue-components/vite'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 
 import { createProxySim } from './server/proxySim'
@@ -31,9 +29,6 @@ export default defineConfig(({ mode }) => {
     plugins: [
       proxySimPlugin(env),
       vue(),
-      Components({
-        resolvers: [VantResolver()]
-      }),
       legacy({
         targets: ['iOS >= 12', 'Android >= 6'],
         modernPolyfills: true

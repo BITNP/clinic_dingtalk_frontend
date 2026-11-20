@@ -2,7 +2,7 @@
   <div>
     <div class="filters" aria-label="预约记录筛选">
       <button v-for="option in filters" :key="option.value" type="button"
-        :aria-pressed="filter === option.value" @click="setFilter(option.value)">{{ option.label }}</button>
+        :aria-pressed="filter === option.value" :disabled="tickets.submitting" @click="setFilter(option.value)">{{ option.label }}</button>
     </div>
     <RecordPreview v-for="record in displayed" :key="record.url" :record="record" @edit="editing = record" />
     <p v-if="!loading && !error && !displayed.length" class="message">
@@ -15,7 +15,7 @@
         {{ loading ? '正在加载…' : '加载更多' }}
       </VuxButton>
     </div>
-    <VuxPopup :show="!!editing" @update:show="(show) => { if (!show) editing = null }">
+    <VuxPopup :show="!!editing" :hide-on-blur="!tickets.submitting" @update:show="(show) => { if (!show && !tickets.submitting) editing = null }">
       <PopupContent v-if="editing" :ticket="editing" @deleted="changed" @updated="changed" />
     </VuxPopup>
   </div>
@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { endpoints } from '@/api/endpoints'
 import { errorMessage } from '@/api/errors'
 import type { Ticket } from '@/api/types'
@@ -47,6 +47,8 @@ const total = ref(0)
 const loading = ref(false)
 const error = ref('')
 const editing = ref<Ticket | null>(null)
+let generation = 0
+onBeforeRouteLeave(() => !tickets.submitting)
 const filter = computed<Filter>(() => route.query.filter === 'working' || route.query.filter === 'finished' ? route.query.filter : 'all')
 const displayed = computed(() => records.value.filter((record) => filter.value === 'all' ||
   (filter.value === 'working' ? isWorkingStatus(record.status) : isFinishedStatus(record.status))))
@@ -56,17 +58,21 @@ async function loadMore(): Promise<void> {
   if (loading.value || !hasMore.value) return
   loading.value = true
   error.value = ''
+  const request = generation
   try {
     const result = await endpoints.listTickets(page.value + 1)
+    if (request !== generation) return
     const seen = new Set(records.value.map((record) => record.url))
     records.value.push(...result.items.filter((record) => !seen.has(record.url)))
     page.value = result.page
     total.value = result.items.length ? result.total : records.value.length
-  } catch (caught) { error.value = errorMessage(caught, '无法获取预约记录') }
-  finally { loading.value = false }
+  } catch (caught) { if (request === generation) error.value = errorMessage(caught, '无法获取预约记录') }
+  finally { if (request === generation) loading.value = false }
 }
 async function changed(): Promise<void> {
   editing.value = null
+  generation++
+  loading.value = false
   records.value = []
   page.value = 0
   total.value = 0

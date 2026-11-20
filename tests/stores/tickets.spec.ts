@@ -102,6 +102,11 @@ describe('ticket mutations', () => {
     expect(endpoints.getWorkingTicket).toHaveBeenCalled()
     expect(await store.createTicket(draft())).toBe(false)
     expect(endpoints.createTicket).toHaveBeenCalledTimes(1)
+    vi.mocked(endpoints.getWorkingTicket).mockRejectedValueOnce(new Error('still offline'))
+    expect(await store.checkUncertainCreate()).toBe(false)
+    expect(store.createUncertain).toBe(true)
+    expect(await store.checkUncertainCreate()).toBe(true)
+    expect(store.createUncertain).toBe(false)
   })
   it('only replaces the working ticket after a successful update', async () => {
     const store = useTicketsStore()

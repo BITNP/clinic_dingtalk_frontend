@@ -15,6 +15,7 @@
     <br />
     <div style="margin: 10px">
       <p v-if="tickets.createUncertain">提交结果尚未确认，请查看预约状态。请勿重复提交。</p>
+      <VuxButton v-if="tickets.createUncertain" @click="tickets.checkUncertainCreate()">重新查询预约状态</VuxButton>
       <VuxButton v-if="tickets.createUncertain" @click="router.push({ name: 'records', query: { filter: 'working' } })">查看预约状态</VuxButton>
       <VuxButton v-else type="primary" :loading="submitting" :disabled="submitting" @click="agree ? submit() : (toc = true)">
         {{ agree ? '提交预约' : '阅读免责声明' }}

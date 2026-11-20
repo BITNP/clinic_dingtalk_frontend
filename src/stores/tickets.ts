@@ -112,6 +112,15 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
   }
 
+  async function checkUncertainCreate(): Promise<boolean> {
+    const ok = await refreshWorking()
+    if (ok) {
+      createUncertain.value = false
+      if (!working.value) ui.success('暂未查到未完成预约，请确认后再重试')
+    }
+    return ok
+  }
+
   async function updateTicket(ticket: Ticket, draft: TicketDraft): Promise<boolean> {
     const id = parseTicketId(ticket.url)
     if (id === null) {
@@ -176,6 +185,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     resetFinished,
     loadFinishedPage,
     createTicket,
+    checkUncertainCreate,
     updateTicket,
     deleteTicket
   }

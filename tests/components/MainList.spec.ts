@@ -50,11 +50,11 @@ describe('MainList new-ticket button', () => {
       }
     })
 
-    expect(wrapper.text()).toContain('新建工单')
+    expect(wrapper.text()).toContain('新建预约')
 
     tickets.working = ticket()
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).not.toContain('新建工单')
+    expect(wrapper.text()).not.toContain('新建预约')
   })
 })

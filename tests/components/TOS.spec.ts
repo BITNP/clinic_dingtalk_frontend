@@ -40,4 +40,26 @@ describe('TOS popup', () => {
     expect(wrapper.findAll('button').find((button) => button.text().includes('同意并继续'))?.attributes('disabled')).toBeDefined()
     wrapper.unmount()
   })
+
+  it('does not count time spent in a background tab', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] })
+    let hidden = false
+    vi.spyOn(document, 'hidden', 'get').mockImplementation(() => hidden)
+    vi.mocked(endpoints.listAnnouncements).mockResolvedValue({
+      items: [{ id: 1, content: '请备份数据', priority: 1 } as never], total: 1, page: 1, pageSize: 100
+    })
+    const wrapper = mount(TOS, { props: { modelValue: true }, global: { stubs: { teleport: true } } })
+    await flushPromises()
+    await vi.advanceTimersByTimeAsync(2000)
+    hidden = true
+    document.dispatchEvent(new Event('visibilitychange'))
+    await vi.advanceTimersByTimeAsync(10000)
+    hidden = false
+    document.dispatchEvent(new Event('visibilitychange'))
+    const agree = () => wrapper.findAll('button').find((button) => button.text().includes('同意并继续'))!
+    expect(agree().attributes('disabled')).toBeDefined()
+    await vi.advanceTimersByTimeAsync(3000)
+    expect(agree().attributes('disabled')).toBeUndefined()
+    wrapper.unmount()
+  })
 })

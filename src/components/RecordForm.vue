@@ -2,18 +2,21 @@
   <div>
     <div class="weui-cells__title">必填项</div>
     <div class="weui-cells">
+      <div v-if="create" class="weui-cell">
+        <div class="weui-cell__bd">校区</div><div class="weui-cell__ft">{{ selectedCampusName }}</div>
+      </div>
       <SelectorCell
         v-model="campus"
-        title="校区"
+        title="诊室"
         :options="campusOptions"
-        placeholder="请选择校区"
+        placeholder="请选择诊室"
       />
 
       <DatePickerCell
         v-model="appointmentTime"
         title="预约时间"
         placeholder="请选择一个日期，可选表示正常营业"
-        :readonly="!create"
+        :readonly="true"
         :disable-date="isDateDisabled"
       />
 
@@ -25,6 +28,9 @@
         <div class="weui-cell__ft">
           {{ selectedDate.startLabel }} - {{ selectedDate.endLabel }}
         </div>
+      </div>
+      <div v-if="selectedDate?.room" class="weui-cell">
+        <div class="weui-cell__bd">诊室地址</div><div class="weui-cell__ft">{{ selectedDate.room.address }}</div>
       </div>
 
       <div class="weui-cell vux-x-textarea">
@@ -114,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted } from 'vue'
 
 import type { TicketDraft } from '@/api/types'
 import DatePickerCell from '@/components/ui/DatePickerCell.vue'
@@ -125,9 +131,11 @@ import { useCatalogStore } from '@/stores/catalog'
 const props = withDefaults(
   defineProps<{
     create?: boolean
+    campusId?: number
   }>(),
   {
-    create: true
+    create: true,
+    campusId: undefined
   }
 )
 
@@ -184,8 +192,12 @@ const password = computed({
 })
 
 const campusOptions = computed<SelectorOption[]>(() =>
-  catalog.rooms.map((room) => ({ label: room.name, value: room.name }))
+  catalog.rooms.filter((room) => !props.create || (room.campus_id === props.campusId &&
+    catalog.datesWithRoom.some((date) => date.room_id === room.id && date.dateOnly === appointmentTime.value && date.remaining > 0)))
+    .map((room) => ({ label: room.name, value: room.name }))
 )
+
+const selectedCampusName = computed(() => catalog.campuses.find((item) => item.id === props.campusId)?.name ?? '')
 
 const availableDates = computed(() =>
   availableDatesForCampus(catalog.datesWithRoom, campus.value)
@@ -212,17 +224,6 @@ function labelWidth(title: string): string {
   }
   return width < 10 ? `${width}em` : ''
 }
-
-let previousCampus = draft.value.campus
-watch(campus, (value) => {
-  // Match the original create flow: changing campus invalidates the date.
-  // In edit mode the date cell is read-only, so keep the value to avoid a
-  // form that cannot be submitted.
-  if (props.create && previousCampus && value !== previousCampus) {
-    appointmentTime.value = ''
-  }
-  previousCampus = value
-})
 
 onMounted(() => {
   void catalog.ensure()

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Room, ServiceDate } from '@/api/types'
 import {
   availableDatesForCampus,
+  campusDates,
   buildDateOptions,
   findServiceDate,
   getRoomAddress,
@@ -48,5 +49,18 @@ describe('catalog joins', () => {
   it('finds a service date by campus and day', () => {
     expect(findServiceDate(joined, '北区医务室', '2026-11-02')?.title).toBe('周一晚')
     expect(findServiceDate(joined, '北区医务室', '2026-11-04')).toBeUndefined()
+  })
+
+  it('includes full campuses and sums remaining room capacity without going negative', () => {
+    const campus = [{ id: 9, name: '校区', selection_policy: 'balanced' as const }]
+    const locations = [
+      { ...rooms[0], campus_id: 9 },
+      { ...rooms[1], campus_id: 9 }
+    ]
+    const services = joinServiceDates([
+      { ...dates[0], room_id: locations[0].id, capacity: 2, count: 3 },
+      { ...dates[0], id: 99, room_id: locations[1].id, capacity: 4, count: 4 }
+    ], locations)
+    expect(campusDates(services, campus, '2026-11-02')[0]).toMatchObject({ capacity: 6, count: 7, remaining: 0 })
   })
 })

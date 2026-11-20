@@ -92,7 +92,7 @@ export function draftToUpdateBody(draft: TicketDraft): UpdateTicketBody {
 }
 
 export function validateDraft(draft: TicketDraft): string | null {
-  if (!draft.campus.trim()) return '请选择校区'
+  if (!draft.campus.trim()) return '请选择诊室'
   if (!draft.appointment_time.trim()) return '请选择预约时间'
   if (!draft.description.trim()) return '请填写问题描述'
   if (draft.description.trim().length > 600) return '问题描述不能超过 600 个字符'

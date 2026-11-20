@@ -28,7 +28,7 @@
 
     <div v-if="showNewButton" class="page-footer">
       <div style="margin: 10px">
-        <VuxButton type="primary" @click="goNew">新建工单</VuxButton>
+        <VuxButton type="primary" @click="goNew">新建预约</VuxButton>
       </div>
     </div>
   </div>
@@ -49,7 +49,7 @@ interface TabItem {
 }
 
 const tabs: TabItem[] = [
-  { title: '公告', name: 'announcements' },
+  { title: '首页', name: 'announcements' },
   { title: '诊所服务日历', name: 'calendar' },
   { title: '正在处理', name: 'working' },
   { title: '已处理', name: 'finish' }
@@ -64,7 +64,7 @@ const tabNum = computed(() => {
   return index >= 0 ? index : 0
 })
 
-const showNewButton = computed(() => tickets.workingLoaded && !tickets.hasWorking)
+const showNewButton = computed(() => route.name === 'announcements' && tickets.workingLoaded && !tickets.hasWorking)
 
 function switchTab(index: number): void {
   if (index === tabNum.value) return
@@ -72,7 +72,7 @@ function switchTab(index: number): void {
 }
 
 function goNew(): void {
-  router.push({ name: 'record' })
+  router.push({ name: 'calendar' })
 }
 </script>
 

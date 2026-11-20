@@ -18,6 +18,17 @@ export interface Room {
   name: string
   address: string
   enabled: boolean
+  campus_id: number
+}
+
+export interface Campus {
+  id: number
+  name: string
+  selection_policy: 'balanced' | 'fulfill'
+}
+
+export interface CampusRooms extends Page<Room> {
+  preferred_room_id: number | null
 }
 
 export interface ServiceDate {

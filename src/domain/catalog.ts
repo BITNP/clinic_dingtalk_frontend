@@ -1,4 +1,4 @@
-import type { Room, ServiceDate } from '@/api/types'
+import type { Campus, Room, ServiceDate } from '@/api/types'
 
 import { formatDateOnly, formatMonthDay, formatTime, formatWeekday } from './format'
 
@@ -19,6 +19,19 @@ export interface DateOption {
 export interface ServiceDateOption extends DateOption {
   startLabel: string
   endLabel: string
+}
+
+export function campusDates(dates: ServiceDateWithRoom[], campuses: Campus[], day: string) {
+  return campuses.map((campus) => {
+    const services = dates.filter((date) => date.dateOnly === day && date.room?.enabled && date.room.campus_id === campus.id)
+    return {
+      campus,
+      services,
+      capacity: services.reduce((sum, date) => sum + date.capacity, 0),
+      count: services.reduce((sum, date) => sum + date.count, 0),
+      remaining: services.reduce((sum, date) => sum + date.remaining, 0)
+    }
+  }).filter((item) => item.services.length > 0)
 }
 
 export function joinServiceDates(dates: ServiceDate[], rooms: Room[]): ServiceDateWithRoom[] {

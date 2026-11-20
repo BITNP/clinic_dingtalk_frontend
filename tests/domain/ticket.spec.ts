@@ -100,7 +100,7 @@ describe('validateDraft', () => {
   })
 
   it('rejects missing required fields', () => {
-    expect(validateDraft({ ...valid, campus: '' })).toBe('请选择校区')
+    expect(validateDraft({ ...valid, campus: '' })).toBe('请选择诊室')
     expect(validateDraft({ ...valid, description: '' })).toBe('请填写问题描述')
   })
 })

@@ -2,6 +2,8 @@ import { api } from './client'
 import type {
   Announcement,
   AnnouncementQuery,
+  Campus,
+  CampusRooms,
   CreateTicketBody,
   Page,
   Room,
@@ -13,6 +15,17 @@ import type {
 } from './types'
 
 export const endpoints = {
+  listCampuses(params: { page?: number; pageSize?: number } = {}): Promise<Page<Campus>> {
+    return api.get<Page<Campus>>('/campuses', { params }).then((response) => response.data)
+  },
+
+  recommendRoom(campusId: number, date: string): Promise<CampusRooms> {
+    return api.get<CampusRooms>(`/campuses/${campusId}/rooms`, { params: { date, enabled: true } }).then((response) => response.data)
+  },
+
+  getRoom(id: number): Promise<Room> {
+    return api.get<Room>(`/rooms/${id}`).then((response) => response.data)
+  },
   listAnnouncements(params: AnnouncementQuery = {}): Promise<Page<Announcement>> {
     return api
       .get<Page<Announcement>>('/announcements', { params })

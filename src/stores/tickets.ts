@@ -28,20 +28,28 @@ export const useTicketsStore = defineStore('tickets', () => {
   const hasWorking = computed(() => Boolean(working.value))
   const hasMoreFinished = computed(() => finished.value.length < finishedTotal.value)
 
-  async function refreshWorking(silent = false): Promise<void> {
-    if (workingLoading.value) return
+  let workingRequest: Promise<boolean> | null = null
+  function refreshWorking(silent = false): Promise<boolean> {
+    if (workingRequest) return workingRequest
+    workingRequest = loadWorking(silent).finally(() => { workingRequest = null })
+    return workingRequest
+  }
+
+  async function loadWorking(silent: boolean): Promise<boolean> {
     workingLoading.value = true
 
     try {
       const response = await endpoints.getWorkingTicket()
       working.value = response.count > 0 && response.data ? response.data : null
+      workingLoaded.value = true
+      return true
     } catch (caught) {
-      working.value = null
+      workingLoaded.value = false
       if (!silent) {
         ui.error(errorMessage(caught, '无法获取当前工单'))
       }
+      return false
     } finally {
-      workingLoaded.value = true
       workingLoading.value = false
     }
   }

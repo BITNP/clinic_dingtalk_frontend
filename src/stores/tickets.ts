@@ -25,6 +25,7 @@ export const useTicketsStore = defineStore('tickets', () => {
 
   const submitting = ref(false)
   const createUncertain = ref(false)
+  const uncertainChecked = ref(false)
   const lastCreated = ref<Ticket | null>(null)
 
   const hasWorking = computed(() => Boolean(working.value))
@@ -101,6 +102,7 @@ export const useTicketsStore = defineStore('tickets', () => {
       const status = toApiError(caught).status
       if (status === undefined || status >= 500) {
         createUncertain.value = true
+        uncertainChecked.value = false
         await refreshWorking(true)
         ui.error('提交结果尚未确认，请查看预约状态')
       } else {
@@ -115,8 +117,8 @@ export const useTicketsStore = defineStore('tickets', () => {
   async function checkUncertainCreate(): Promise<boolean> {
     const ok = await refreshWorking()
     if (ok) {
-      createUncertain.value = false
-      if (!working.value) ui.success('暂未查到未完成预约，请确认后再重试')
+      if (working.value) createUncertain.value = false
+      else uncertainChecked.value = true
     }
     return ok
   }
@@ -178,6 +180,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     finishedError,
     submitting,
     createUncertain,
+    uncertainChecked,
     lastCreated,
     hasWorking,
     hasMoreFinished,

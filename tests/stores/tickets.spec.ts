@@ -106,7 +106,8 @@ describe('ticket mutations', () => {
     expect(await store.checkUncertainCreate()).toBe(false)
     expect(store.createUncertain).toBe(true)
     expect(await store.checkUncertainCreate()).toBe(true)
-    expect(store.createUncertain).toBe(false)
+    expect(store.createUncertain).toBe(true)
+    expect(store.uncertainChecked).toBe(true)
   })
   it('only replaces the working ticket after a successful update', async () => {
     const store = useTicketsStore()

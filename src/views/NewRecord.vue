@@ -1,22 +1,16 @@
 <template>
   <div>
-    <VuxHeader title="新建工单" />
+    <VuxHeader title="新建预约" />
     <RecordForm v-model="draft" :create="true" />
     <br />
-    <VuxCheckIcon v-model="agree">
-      我已阅读并同意
-      <a style="color: blue" @click.stop="toc = true">免责声明</a>
-      中的内容
-    </VuxCheckIcon>
-
-    <br />
     <div style="margin: 10px">
-      <VuxButton type="primary" :loading="tickets.submitting" @click="submit">
-        提交
+      <VuxButton type="primary" :loading="tickets.submitting" :disabled="tickets.submitting" @click="agree ? submit() : (toc = true)">
+        {{ agree ? '提交预约' : '阅读免责声明' }}
       </VuxButton>
+      <VuxButton v-if="agree" @click="toc = true">重新查看免责声明</VuxButton>
     </div>
 
-    <TOS v-model="toc" />
+    <TOS v-model="toc" @agree="acceptTos" />
   </div>
 </template>
 
@@ -28,7 +22,6 @@ import type { TicketDraft } from '@/api/types'
 import RecordForm from '@/components/RecordForm.vue'
 import TOS from '@/components/TOS.vue'
 import VuxButton from '@/components/ui/VuxButton.vue'
-import VuxCheckIcon from '@/components/ui/VuxCheckIcon.vue'
 import VuxHeader from '@/components/ui/VuxHeader.vue'
 import { validateDraft } from '@/domain/ticket'
 import { useCatalogStore } from '@/stores/catalog'
@@ -41,6 +34,7 @@ const tickets = useTicketsStore()
 const ui = useUiStore()
 
 const agree = ref(false)
+const acceptedContent = ref('')
 const toc = ref(false)
 const draft = ref<TicketDraft>({
   campus: '',
@@ -50,6 +44,15 @@ const draft = ref<TicketDraft>({
   phone_num: '',
   model: '',
   password: ''
+})
+
+function acceptTos(content: string): void {
+  acceptedContent.value = content
+  agree.value = true
+}
+
+watch(() => catalog.tosContent, (content) => {
+  if (agree.value && content && content.trim() !== acceptedContent.value) agree.value = false
 })
 
 watch(

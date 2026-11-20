@@ -21,16 +21,10 @@
     <div class="tab-spacer"></div>
 
     <div class="page-content">
-      <TopAnnouncements />
       <router-view />
       <Footer />
     </div>
 
-    <div v-if="showNewButton" class="page-footer">
-      <div style="margin: 10px">
-        <VuxButton type="primary" @click="goNew">新建预约</VuxButton>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -39,9 +33,6 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import Footer from '@/components/Footer.vue'
-import TopAnnouncements from '@/components/TopAnnouncements.vue'
-import VuxButton from '@/components/ui/VuxButton.vue'
-import { useTicketsStore } from '@/stores/tickets'
 
 interface TabItem {
   title: string
@@ -56,23 +47,17 @@ const tabs: TabItem[] = [
 
 const route = useRoute()
 const router = useRouter()
-const tickets = useTicketsStore()
 
 const tabNum = computed(() => {
   const index = tabs.findIndex((tab) => tab.name === route.name)
   return index >= 0 ? index : 0
 })
 
-const showNewButton = computed(() => route.name === 'announcements' && tickets.workingLoaded && !tickets.hasWorking)
-
 function switchTab(index: number): void {
   if (index === tabNum.value) return
   router.push({ name: tabs[index].name })
 }
 
-function goNew(): void {
-  router.push({ name: 'calendar' })
-}
 </script>
 
 <style scoped>

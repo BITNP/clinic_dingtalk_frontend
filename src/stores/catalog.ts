@@ -21,32 +21,28 @@ export const useCatalogStore = defineStore('catalog', () => {
   const error = ref('')
 
   let pending: Promise<boolean> | null = null
-  function reload(): Promise<boolean> {
+  function reloadLocations(): Promise<boolean> {
     if (pending) return pending
-    pending = load().finally(() => { pending = null })
+    pending = loadLocations().finally(() => { pending = null })
     return pending
   }
 
-  async function load(): Promise<boolean> {
+  async function loadLocations(): Promise<boolean> {
     loading.value = true
     error.value = ''
 
     try {
-      const [campusItems, roomItems, dateItems, announcementItems] = await Promise.all([
+      const [campusItems, roomItems, dateItems] = await Promise.all([
         fetchAllPages((page, pageSize) => endpoints.listCampuses({ page, pageSize })),
         fetchAllPages((page, pageSize) => endpoints.listRooms({ enabled: true, page, pageSize })),
         fetchAllPages((page, pageSize) =>
           endpoints.listServiceDates({ active: true, page, pageSize })
-        ),
-        fetchAllPages((page, pageSize) =>
-          endpoints.listAnnouncements({ active: true, page, pageSize })
         )
       ])
 
       campuses.value = campusItems
       rooms.value = roomItems
       serviceDates.value = dateItems
-      announcements.value = announcementItems
       loaded.value = true
       return true
     } catch (caught) {
@@ -58,10 +54,21 @@ export const useCatalogStore = defineStore('catalog', () => {
     }
   }
 
+  async function reload(): Promise<boolean> {
+    const [locationsOK, announcementItems] = await Promise.all([
+      reloadLocations(),
+      fetchAllPages((page, pageSize) => endpoints.listAnnouncements({ active: true, page, pageSize }))
+        .catch((caught: unknown) => { ui.error(errorMessage(caught, '无法获取公告')); return null })
+    ])
+    if (announcementItems === null) return false
+    announcements.value = announcementItems
+    return locationsOK
+  }
+
   async function ensure(): Promise<boolean> {
     if (pending) return pending
     if (loaded.value) return true
-    return reload()
+    return reloadLocations()
   }
 
   const datesWithRoom = computed(() => joinServiceDates(serviceDates.value, rooms.value))
@@ -89,6 +96,7 @@ export const useCatalogStore = defineStore('catalog', () => {
     loaded,
     error,
     reload,
+    reloadLocations,
     ensure,
     datesWithRoom,
     announcementList,

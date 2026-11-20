@@ -4,7 +4,7 @@
     <p v-if="catalog.loading">正在加载服务日历…</p>
     <div v-else-if="catalog.error" style="margin: 10px">
       <p>无法获取服务日历，请重试</p>
-      <VuxButton @click="catalog.reload()">重试</VuxButton>
+      <VuxButton @click="catalog.reloadLocations()">重试</VuxButton>
     </div>
     <template v-else-if="day">
       <div class="weui-cells__title">请选择校区</div>
@@ -78,12 +78,12 @@ async function next(): Promise<void> {
   const date = day.value
   const id = campusId.value!
   try {
-    if (!await catalog.reload()) throw new Error('无法刷新服务日期')
+    if (!await catalog.reloadLocations()) throw new Error('无法刷新服务日期')
     if (version !== selectionVersion) return
     const response = await endpoints.recommendRoom(id, date)
     if (version !== selectionVersion) return
     if (response.preferred_room_id === null) {
-      await catalog.reload()
+      await catalog.reloadLocations()
       if (version === selectionVersion) selectionError.value = '该校区当前没有可预约诊室，请重新选择'
       return
     }

@@ -18,7 +18,7 @@ function setup(count: number) {
   catalog.campuses = [{ id: 1, name: '中关村', selection_policy: 'balanced' }]
   catalog.rooms = [{ id: 2, name: '诊室', address: '地址', campus_id: 1, enabled: true }]
   catalog.serviceDates = [{ id: 3, room_id: 2, date: '2099-01-02', startTime: '2099-01-02T09:00:00+08:00', endTime: '2099-01-02T10:00:00+08:00', capacity: 1, count, title: '服务' }]
-  vi.spyOn(catalog, 'reload').mockResolvedValue(true)
+  vi.spyOn(catalog, 'reloadLocations').mockResolvedValue(true)
   const tickets = useTicketsStore()
   tickets.workingLoaded = true
   return mount(Calendar, { global: { stubs: {

@@ -18,7 +18,7 @@
         @change="onChange"
       >
         <option v-if="placeholder" value="">{{ placeholder }}</option>
-        <option v-for="option in options" :key="option.value" :value="option.value">
+        <option v-for="option in options" :key="option.value" :value="option.value" :disabled="option.disabled">
           {{ option.label }}
         </option>
       </select>
@@ -36,6 +36,7 @@ import { computed } from 'vue'
 export interface SelectorOption {
   label: string
   value: string
+  disabled?: boolean
 }
 
 const props = withDefaults(

@@ -94,6 +94,15 @@ describe('finished ticket pagination', () => {
 })
 
 describe('ticket mutations', () => {
+  it('reconciles an uncertain create and prevents a second request', async () => {
+    vi.mocked(endpoints.createTicket).mockRejectedValueOnce(new Error('connection lost'))
+    const store = useTicketsStore()
+    expect(await store.createTicket(draft())).toBe(false)
+    expect(store.createUncertain).toBe(true)
+    expect(endpoints.getWorkingTicket).toHaveBeenCalled()
+    expect(await store.createTicket(draft())).toBe(false)
+    expect(endpoints.createTicket).toHaveBeenCalledTimes(1)
+  })
   it('only replaces the working ticket after a successful update', async () => {
     const store = useTicketsStore()
     const original = ticket(5, 'confirmed')

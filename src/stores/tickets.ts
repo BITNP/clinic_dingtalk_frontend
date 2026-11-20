@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import { endpoints } from '@/api/endpoints'
-import { errorMessage } from '@/api/errors'
+import { errorMessage, toApiError } from '@/api/errors'
 import type { Ticket, TicketDraft } from '@/api/types'
 import { draftToCreateBody, draftToUpdateBody, parseTicketId } from '@/domain/ticket'
 
@@ -24,6 +24,8 @@ export const useTicketsStore = defineStore('tickets', () => {
   const finishedError = ref('')
 
   const submitting = ref(false)
+  const createUncertain = ref(false)
+  const lastCreated = ref<Ticket | null>(null)
 
   const hasWorking = computed(() => Boolean(working.value))
   const hasMoreFinished = computed(() => finished.value.length < finishedTotal.value)
@@ -86,16 +88,24 @@ export const useTicketsStore = defineStore('tickets', () => {
   }
 
   async function createTicket(draft: TicketDraft): Promise<boolean> {
-    if (submitting.value) return false
+    if (submitting.value || createUncertain.value) return false
     submitting.value = true
 
     try {
-      await endpoints.createTicket(draftToCreateBody(draft))
+      const created = await endpoints.createTicket(draftToCreateBody(draft))
+      lastCreated.value = { ...created, password: '' }
       await refreshWorking(true)
       ui.success('提交成功')
       return true
     } catch (caught) {
-      ui.error(errorMessage(caught, '提交失败，请稍后重试'))
+      const status = toApiError(caught).status
+      if (status === undefined || status >= 500) {
+        createUncertain.value = true
+        await refreshWorking(true)
+        ui.error('提交结果尚未确认，请查看预约状态')
+      } else {
+        ui.error(errorMessage(caught, '提交失败，请稍后重试'))
+      }
       return false
     } finally {
       submitting.value = false
@@ -158,6 +168,8 @@ export const useTicketsStore = defineStore('tickets', () => {
     finishedLoading,
     finishedError,
     submitting,
+    createUncertain,
+    lastCreated,
     hasWorking,
     hasMoreFinished,
     refreshWorking,

@@ -11,6 +11,7 @@
         :options="campusOptions"
         placeholder="请选择诊室"
       />
+      <p v-if="errors.campus || unavailableRoom" class="field-error">{{ errors.campus || '该诊室已不可预约，请重新选择' }}</p>
 
       <DatePickerCell
         v-model="appointmentTime"
@@ -19,6 +20,7 @@
         :readonly="true"
         :disable-date="isDateDisabled"
       />
+      <p v-if="errors.appointment_time" class="field-error">{{ errors.appointment_time }}</p>
 
       <div v-if="selectedDate" class="weui-cell">
         <div class="weui-cell__bd">
@@ -52,6 +54,7 @@
           </div>
         </div>
       </div>
+      <p v-if="errors.description" class="field-error">{{ errors.description }}</p>
 
       <div class="vux-x-input weui-cell">
         <div class="weui-cell__hd">
@@ -66,6 +69,7 @@
           />
         </div>
       </div>
+      <p v-if="errors.realname" class="field-error">{{ errors.realname }}</p>
 
       <div class="vux-x-input weui-cell">
         <div class="weui-cell__hd">
@@ -81,6 +85,7 @@
           />
         </div>
       </div>
+      <p v-if="errors.phone_num" class="field-error">{{ errors.phone_num }}</p>
     </div>
 
     <div class="weui-cells__title">选填项，这将有助于我们提供更好的服务</div>
@@ -98,6 +103,7 @@
           />
         </div>
       </div>
+      <p v-if="errors.model" class="field-error">{{ errors.model }}</p>
 
       <div class="vux-x-input weui-cell">
         <div class="weui-cell__hd">
@@ -132,10 +138,12 @@ const props = withDefaults(
   defineProps<{
     create?: boolean
     campusId?: number
+    errors?: Partial<Record<keyof TicketDraft, string>>
   }>(),
   {
     create: true,
-    campusId: undefined
+    campusId: undefined,
+    errors: () => ({})
   }
 )
 
@@ -191,11 +199,18 @@ const password = computed({
   }
 })
 
-const campusOptions = computed<SelectorOption[]>(() =>
-  catalog.rooms.filter((room) => !props.create || (room.campus_id === props.campusId &&
+const campusOptions = computed<SelectorOption[]>(() => {
+  const options: SelectorOption[] = catalog.rooms.filter((room) => !props.create || (room.campus_id === props.campusId && room.enabled &&
     catalog.datesWithRoom.some((date) => date.room_id === room.id && date.dateOnly === appointmentTime.value && date.remaining > 0)))
     .map((room) => ({ label: room.name, value: room.name }))
-)
+  if (campus.value && !options.some((option) => option.value === campus.value)) {
+    options.unshift({ label: `${campus.value}${props.create ? '（已不可预约）' : ''}`, value: campus.value, disabled: props.create })
+  }
+  return options
+})
+
+const unavailableRoom = computed(() => props.create && !!campus.value && !catalog.datesWithRoom.some((date) =>
+  date.room?.name === campus.value && date.room.enabled && date.room.campus_id === props.campusId && date.dateOnly === appointmentTime.value && date.remaining > 0))
 
 const selectedCampusName = computed(() => catalog.campuses.find((item) => item.id === props.campusId)?.name ?? '')
 
@@ -229,3 +244,7 @@ onMounted(() => {
   void catalog.ensure()
 })
 </script>
+
+<style scoped>
+.field-error { color: #b42318; padding: 2px 15px 8px; font-size: 0.875rem; }
+</style>

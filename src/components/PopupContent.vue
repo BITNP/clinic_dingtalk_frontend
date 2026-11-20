@@ -9,7 +9,9 @@
     <div class="weui-panel weui-panel_access">
       <div class="weui-panel__bd">
         <div class="vux-card-content">
-          <RecordForm v-model="draft" :create="false" />
+          <fieldset :disabled="tickets.submitting" class="form-fields">
+            <RecordForm v-model="draft" :create="false" :errors="errors" />
+          </fieldset>
           <br />
         </div>
       </div>
@@ -20,6 +22,7 @@
         <VuxButton
           type="primary"
           :loading="tickets.submitting"
+          :disabled="tickets.submitting"
           @click="update"
         >
           更新
@@ -38,10 +41,10 @@
           <br />
           <div class="vux-flexbox">
             <div class="vux-flexbox-item">
-              <VuxButton type="default" @click="deleteConfirm = false">取消</VuxButton>
+            <VuxButton type="default" :disabled="tickets.submitting" @click="deleteConfirm = false">返回</VuxButton>
             </div>
             <div class="vux-flexbox-item" style="margin-left: 8px">
-              <VuxButton type="warn" @click="remove">确认取消</VuxButton>
+            <VuxButton type="warn" :disabled="tickets.submitting" @click="remove">确认取消</VuxButton>
             </div>
           </div>
         </template>
@@ -58,7 +61,7 @@ import { ref } from 'vue'
 import type { Ticket } from '@/api/types'
 import RecordForm from '@/components/RecordForm.vue'
 import VuxButton from '@/components/ui/VuxButton.vue'
-import { ticketToDraft, validateDraft } from '@/domain/ticket'
+import { draftErrors, ticketToDraft } from '@/domain/ticket'
 import { useTicketsStore } from '@/stores/tickets'
 import { useUiStore } from '@/stores/ui'
 
@@ -74,12 +77,13 @@ const emit = defineEmits<{
 const tickets = useTicketsStore()
 const ui = useUiStore()
 const draft = ref(ticketToDraft(props.ticket))
+const errors = ref<ReturnType<typeof draftErrors>>({})
 const deleteConfirm = ref(false)
 
 async function update(): Promise<void> {
-  const message = validateDraft(draft.value)
-  if (message) {
-    ui.error(message)
+  errors.value = draftErrors(draft.value)
+  if (Object.keys(errors.value).length) {
+    ui.error('请检查预约信息')
     return
   }
 
@@ -93,3 +97,7 @@ async function remove(): Promise<void> {
   }
 }
 </script>
+
+<style scoped>
+.form-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+</style>

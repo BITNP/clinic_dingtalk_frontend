@@ -1,6 +1,6 @@
 <template>
   <div>
-    <VuxHeader title="新建预约" />
+    <VuxHeader title="新建预约" :disabled="submitting" />
     <p v-if="initializing">正在确认预约信息…</p>
     <div v-else-if="initializationError" style="margin: 10px">
       <p>{{ initializationError }}</p>
@@ -8,14 +8,18 @@
       <VuxButton @click="router.replace({ name: 'calendar' })">返回日历</VuxButton>
     </div>
     <template v-else>
-    <RecordForm v-model="draft" :create="true" :campus-id="campusId" />
-    <div style="margin: 10px"><VuxButton @click="router.push({ name: 'calendar' })">重新选择日期和校区</VuxButton></div>
+    <fieldset :disabled="submitting || tickets.createUncertain" class="form-fields">
+      <RecordForm v-model="draft" :create="true" :campus-id="campusId" :errors="errors" />
+      <div style="margin: 10px"><VuxButton @click="router.push({ name: 'calendar' })">重新选择日期和校区</VuxButton></div>
+    </fieldset>
     <br />
     <div style="margin: 10px">
-      <VuxButton type="primary" :loading="submitting" :disabled="submitting" @click="agree ? submit() : (toc = true)">
+      <p v-if="tickets.createUncertain">提交结果尚未确认，请查看预约状态。请勿重复提交。</p>
+      <VuxButton v-if="tickets.createUncertain" @click="router.push({ name: 'records', query: { filter: 'working' } })">查看预约状态</VuxButton>
+      <VuxButton v-else type="primary" :loading="submitting" :disabled="submitting" @click="agree ? submit() : (toc = true)">
         {{ agree ? '提交预约' : '阅读免责声明' }}
       </VuxButton>
-      <VuxButton v-if="agree" @click="toc = true">重新查看免责声明</VuxButton>
+      <VuxButton v-if="agree && !tickets.createUncertain" :disabled="submitting" @click="toc = true">重新查看免责声明</VuxButton>
     </div>
 
     <TOS v-model="toc" @agree="acceptTos" />
@@ -25,14 +29,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
 import type { TicketDraft } from '@/api/types'
 import RecordForm from '@/components/RecordForm.vue'
 import TOS from '@/components/TOS.vue'
 import VuxButton from '@/components/ui/VuxButton.vue'
 import VuxHeader from '@/components/ui/VuxHeader.vue'
-import { validateDraft } from '@/domain/ticket'
+import { draftErrors } from '@/domain/ticket'
 import { CLINIC_TIME_ZONE } from '@/domain/format'
 import { useCatalogStore } from '@/stores/catalog'
 import { useAppointmentDraftStore } from '@/stores/appointmentDraft'
@@ -53,6 +57,8 @@ const campusId = ref<number>()
 const initializing = ref(true)
 const initializationError = ref('')
 const submitting = ref(false)
+const allowNavigation = ref(false)
+const errors = ref<Partial<Record<keyof TicketDraft, string>>>({})
 const draft = ref<TicketDraft>(savedDraft.draft ?? {
   campus: '',
   appointment_time: '',
@@ -62,7 +68,8 @@ const draft = ref<TicketDraft>(savedDraft.draft ?? {
   model: '',
   password: ''
 })
-watch(draft, (value) => { savedDraft.draft = { ...value } }, { deep: true })
+watch(draft, (value) => { savedDraft.draft = { ...value }; if (Object.keys(errors.value).length) errors.value = draftErrors(value) }, { deep: true })
+onBeforeRouteLeave(() => !submitting.value || allowNavigation.value)
 
 function acceptTos(content: string): void {
   acceptedContent.value = content
@@ -110,9 +117,9 @@ async function initialize(): Promise<void> {
 async function submit(): Promise<void> {
   if (submitting.value || tickets.submitting) return
 
-  const message = validateDraft(draft.value)
-  if (message) {
-    ui.error(message)
+  errors.value = draftErrors(draft.value)
+  if (Object.keys(errors.value).length) {
+    ui.error('请检查预约信息')
     return
   }
 
@@ -138,6 +145,7 @@ async function submit(): Promise<void> {
     const ok = await tickets.createTicket(draft.value)
     if (ok) {
       savedDraft.draft = null
+      allowNavigation.value = true
       await router.push({ name: 'success' })
     }
   } finally { submitting.value = false }
@@ -147,3 +155,7 @@ onMounted(() => {
   void initialize()
 })
 </script>
+
+<style scoped>
+.form-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+</style>

@@ -8,7 +8,7 @@ import { useAppointmentDraftStore } from '@/stores/appointmentDraft'
 
 const route = { query: { date: '2099-01-02', campus: '1', room: '2' } }
 const replace = vi.fn()
-vi.mock('vue-router', () => ({ useRoute: () => route, useRouter: () => ({ replace, push: vi.fn() }) }))
+vi.mock('vue-router', () => ({ useRoute: () => route, useRouter: () => ({ replace, push: vi.fn() }), onBeforeRouteLeave: vi.fn() }))
 
 beforeEach(() => {
   setActivePinia(createPinia())

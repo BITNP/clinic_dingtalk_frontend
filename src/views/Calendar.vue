@@ -56,6 +56,7 @@ const campusOptions = computed(() => campusDates(catalog.datesWithRoom, catalog.
 const selected = computed(() => campusOptions.value.find((item) => item.campus.id === campusId.value))
 const buttonText = computed(() => {
   if (selecting.value) return '正在获取诊室…'
+  if (tickets.createUncertain) return '请先确认预约状态'
   if (selectionError.value) return '获取诊室失败'
   if (!day.value || !selected.value) return '请选择日期和校区'
   if (!selected.value.remaining) return '该校区已约满'
@@ -63,14 +64,14 @@ const buttonText = computed(() => {
   if (tickets.hasWorking) return '已有未完成预约'
   return '下一步'
 })
-const buttonDisabled = computed(() => selecting.value || !!selectionError.value || catalog.loading || !!catalog.error || !day.value || !selected.value || !selected.value.remaining || !tickets.workingLoaded || tickets.workingLoading || tickets.hasWorking)
+const buttonDisabled = computed(() => tickets.createUncertain || selecting.value || !!selectionError.value || catalog.loading || !!catalog.error || !day.value || !selected.value || !selected.value.remaining || !tickets.workingLoaded || tickets.workingLoading || tickets.hasWorking)
 function isDisabled(date: string): boolean { return !validDates.value.has(date) }
 watch([day, campusId], () => { selectionVersion++; selectionError.value = '' })
 watch(campusOptions, (options) => {
   if (!options.some((item) => item.campus.id === campusId.value)) campusId.value = null
 })
 async function next(): Promise<void> {
-  if (selecting.value || !day.value || !selected.value || !selected.value.remaining || tickets.hasWorking || !tickets.workingLoaded) return
+  if (tickets.createUncertain || selecting.value || !day.value || !selected.value || !selected.value.remaining || tickets.hasWorking || !tickets.workingLoaded) return
   selectionError.value = ''
   selecting.value = true
   const version = selectionVersion

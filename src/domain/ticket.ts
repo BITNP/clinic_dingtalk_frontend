@@ -91,15 +91,20 @@ export function draftToUpdateBody(draft: TicketDraft): UpdateTicketBody {
   }
 }
 
+export function draftErrors(draft: TicketDraft): Partial<Record<keyof TicketDraft, string>> {
+  const errors: Partial<Record<keyof TicketDraft, string>> = {}
+  if (!draft.campus.trim()) errors.campus = '请选择诊室'
+  if (!draft.appointment_time.trim()) errors.appointment_time = '请选择预约时间'
+  if (!draft.description.trim()) errors.description = '请填写问题描述'
+  else if (draft.description.trim().length > 600) errors.description = '问题描述不能超过 600 个字符'
+  if (!draft.realname.trim()) errors.realname = '请填写真实姓名'
+  else if (draft.realname.trim().length > 50) errors.realname = '真实姓名不能超过 50 个字符'
+  if (!draft.phone_num.trim()) errors.phone_num = '请填写手机号'
+  else if (!PHONE_PATTERN.test(draft.phone_num.trim())) errors.phone_num = '请输入正确的手机号'
+  if (draft.model.trim().length > 200) errors.model = '电脑型号不能超过 200 个字符'
+  return errors
+}
+
 export function validateDraft(draft: TicketDraft): string | null {
-  if (!draft.campus.trim()) return '请选择诊室'
-  if (!draft.appointment_time.trim()) return '请选择预约时间'
-  if (!draft.description.trim()) return '请填写问题描述'
-  if (draft.description.trim().length > 600) return '问题描述不能超过 600 个字符'
-  if (!draft.realname.trim()) return '请填写真实姓名'
-  if (draft.realname.trim().length > 50) return '真实姓名不能超过 50 个字符'
-  if (!draft.phone_num.trim()) return '请填写手机号'
-  if (!PHONE_PATTERN.test(draft.phone_num.trim())) return '请输入正确的手机号'
-  if (draft.model.trim().length > 200) return '电脑型号不能超过 200 个字符'
-  return null
+  return Object.values(draftErrors(draft))[0] ?? null
 }

@@ -8,23 +8,24 @@
       <VuxButton @click="router.replace({ name: 'calendar' })">返回日历</VuxButton>
     </div>
     <template v-else>
-    <fieldset :disabled="submitting || tickets.createUncertain" class="form-fields">
+    <fieldset :disabled="submitting || tickets.createUncertain || tickets.hasWorking" class="form-fields">
       <RecordForm v-model="draft" :create="true" :campus-id="campusId" :errors="errors" />
       <div style="margin: 10px"><VuxButton @click="router.push({ name: 'calendar' })">重新选择日期和校区</VuxButton></div>
     </fieldset>
     <br />
     <div style="margin: 10px">
-      <p v-if="tickets.createUncertain">提交结果尚未确认，请查看预约状态。请勿重复提交。</p>
-      <VuxButton v-if="tickets.createUncertain" @click="tickets.checkUncertainCreate()">重新查询预约状态</VuxButton>
-      <template v-if="tickets.createUncertain && tickets.uncertainChecked">
+      <p v-if="tickets.hasWorking">已查到未完成预约，请查看预约状态。</p>
+      <p v-else-if="tickets.createUncertain">提交结果尚未确认，请查看预约状态。请勿重复提交。</p>
+      <VuxButton v-if="tickets.createUncertain && !tickets.hasWorking" @click="tickets.checkUncertainCreate()">重新查询预约状态</VuxButton>
+      <template v-if="tickets.createUncertain && tickets.uncertainChecked && !tickets.hasWorking">
         <p>暂未查到预约，之前的请求仍可能处理中。请稍后再次查询；确认需要重试时可继续。</p>
         <VuxButton @click="tickets.createUncertain = false">我已确认，继续提交</VuxButton>
       </template>
-      <VuxButton v-if="tickets.createUncertain" @click="router.push({ name: 'records', query: { filter: 'working' } })">查看预约状态</VuxButton>
+      <VuxButton v-if="tickets.createUncertain || tickets.hasWorking" @click="router.push({ name: 'records', query: { filter: 'working' } })">查看预约状态</VuxButton>
       <VuxButton v-else type="primary" :loading="submitting" :disabled="submitting" @click="agree ? submit() : (toc = true)">
         {{ agree ? '提交预约' : '阅读免责声明' }}
       </VuxButton>
-      <VuxButton v-if="agree && !tickets.createUncertain" :disabled="submitting" @click="toc = true">重新查看免责声明</VuxButton>
+      <VuxButton v-if="agree && !tickets.createUncertain && !tickets.hasWorking" :disabled="submitting" @click="toc = true">重新查看免责声明</VuxButton>
     </div>
 
     <TOS v-model="toc" @agree="acceptTos" />
@@ -120,7 +121,7 @@ async function initialize(): Promise<void> {
 }
 
 async function submit(): Promise<void> {
-  if (submitting.value || tickets.submitting) return
+  if (submitting.value || tickets.submitting || tickets.hasWorking || tickets.createUncertain) return
 
   errors.value = draftErrors(draft.value)
   if (Object.keys(errors.value).length) {

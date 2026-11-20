@@ -60,4 +60,15 @@ describe('new appointment validation', () => {
     await flushPromises()
     expect(replace).toHaveBeenCalledWith({ name: 'calendar' })
   })
+
+  it('stops submission when reconciliation finds an existing appointment', async () => {
+    const { wrapper, tickets, create } = setup()
+    await flushPromises()
+    tickets.createUncertain = true
+    tickets.working = { status: 'pending' } as never
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('查看预约状态')
+    expect(wrapper.text()).not.toContain('提交预约')
+    expect(create).not.toHaveBeenCalled()
+  })
 })

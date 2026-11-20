@@ -29,7 +29,7 @@ const ticket = computed(() => tickets.working)
 
 function onDeleted(): void {
   display.value = false
-  router.push({ name: 'success', query: { title: '已成功删除工单' } })
+  router.push({ name: 'success', query: { title: '已成功取消预约' } })
 }
 
 onMounted(() => {

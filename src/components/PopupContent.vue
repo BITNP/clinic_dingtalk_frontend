@@ -2,7 +2,7 @@
   <div>
     <div class="vux-popup-header vux-1px-b">
       <div class="vux-popup-header-left"></div>
-      <div class="vux-popup-header-title">编辑当前工单</div>
+      <div class="vux-popup-header-title">编辑当前预约</div>
       <div class="vux-popup-header-right"></div>
     </div>
 
@@ -41,7 +41,7 @@
               <VuxButton type="default" @click="deleteConfirm = false">取消</VuxButton>
             </div>
             <div class="vux-flexbox-item" style="margin-left: 8px">
-              <VuxButton type="warn" @click="remove">确认删除</VuxButton>
+              <VuxButton type="warn" @click="remove">确认取消</VuxButton>
             </div>
           </div>
         </template>
@@ -68,6 +68,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deleted: []
+  updated: []
 }>()
 
 const tickets = useTicketsStore()
@@ -82,7 +83,7 @@ async function update(): Promise<void> {
     return
   }
 
-  await tickets.updateTicket(props.ticket, draft.value)
+  if (await tickets.updateTicket(props.ticket, draft.value)) emit('updated')
 }
 
 async function remove(): Promise<void> {

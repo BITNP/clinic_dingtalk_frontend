@@ -4,7 +4,7 @@
       <div class="weui-wepay-flow__bd">
         <div class="weui-wepay-flow__li weui-wepay-flow__li_done">
           <div class="weui-wepay-flow__state">1</div>
-          <p class="weui-wepay-flow__title-bottom">创建工单</p>
+          <p class="weui-wepay-flow__title-bottom">创建预约</p>
         </div>
 
         <div
@@ -63,7 +63,7 @@
 
     <div class="vux-form-preview weui-form-preview">
       <div class="weui-form-preview__hd">
-        <label class="weui-form-preview__label">工单状态</label>
+        <label class="weui-form-preview__label">预约状态</label>
         <em class="weui-form-preview__value">{{ statusLabel(record.status) }}</em>
       </div>
       <div class="weui-form-preview__bd">

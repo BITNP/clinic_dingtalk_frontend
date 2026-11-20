@@ -48,6 +48,10 @@ export const endpoints = {
     return api.get<WorkingTicketResponse>('/tickets/working').then((response) => response.data)
   },
 
+  listTickets(page = 1, pageSize = 20): Promise<Page<Ticket>> {
+    return api.get<Page<Ticket>>('/tickets', { params: { page, pageSize } }).then((response) => response.data)
+  },
+
   getFinishedTickets(page = 1, pageSize = 20): Promise<Page<Ticket>> {
     return api
       .get<Page<Ticket>>('/tickets/finished', { params: { page, pageSize } })

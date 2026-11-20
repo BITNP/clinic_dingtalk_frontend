@@ -69,7 +69,7 @@ export function buildStatusSteps(status: TicketStatus): StatusStep[] {
 
   return [
     {
-      title: '创建工单',
+      title: '创建预约',
       done: true,
       current: false
     },

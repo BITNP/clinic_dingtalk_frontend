@@ -24,13 +24,13 @@ export function formatTicketNo(url?: string | null): string {
 }
 
 export function buildPreviewItems(ticket: Ticket): PreviewItem[] {
-  const items: PreviewItem[] = [{ label: '工单号', value: formatTicketNo(ticket.url) }]
+  const items: PreviewItem[] = [{ label: '预约单号', value: formatTicketNo(ticket.url) }]
 
   const fields: Array<[keyof Ticket, string]> = [
     ['appointment_time', '预约时间'],
     ['description', '问题描述'],
     ['model', '电脑型号'],
-    ['campus', '校区'],
+    ['campus', '诊室'],
     ['phone_num', '手机号'],
     ['realname', '真实姓名'],
     ['worker_description', '工作人员说明'],

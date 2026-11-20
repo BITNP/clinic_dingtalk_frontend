@@ -45,14 +45,13 @@ import { useTicketsStore } from '@/stores/tickets'
 
 interface TabItem {
   title: string
-  name: 'announcements' | 'calendar' | 'working' | 'finish'
+  name: 'announcements' | 'calendar' | 'records'
 }
 
 const tabs: TabItem[] = [
   { title: '首页', name: 'announcements' },
   { title: '诊所服务日历', name: 'calendar' },
-  { title: '正在处理', name: 'working' },
-  { title: '已处理', name: 'finish' }
+  { title: '预约记录', name: 'records' }
 ]
 
 const route = useRoute()

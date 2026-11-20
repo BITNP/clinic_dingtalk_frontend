@@ -46,7 +46,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     } catch (caught) {
       workingLoaded.value = false
       if (!silent) {
-        ui.error(errorMessage(caught, '无法获取当前工单'))
+        ui.error(errorMessage(caught, '无法获取当前预约'))
       }
       return false
     } finally {
@@ -77,7 +77,7 @@ export const useTicketsStore = defineStore('tickets', () => {
       finishedPage.value = response.page
       return true
     } catch (caught) {
-      finishedError.value = errorMessage(caught, '无法获取已处理工单')
+      finishedError.value = errorMessage(caught, '无法获取已处理预约')
       ui.error(finishedError.value)
       return false
     } finally {
@@ -105,7 +105,7 @@ export const useTicketsStore = defineStore('tickets', () => {
   async function updateTicket(ticket: Ticket, draft: TicketDraft): Promise<boolean> {
     const id = parseTicketId(ticket.url)
     if (id === null) {
-      ui.error('工单信息异常，无法更新')
+      ui.error('预约信息异常，无法更新')
       return false
     }
     if (submitting.value) return false
@@ -129,7 +129,7 @@ export const useTicketsStore = defineStore('tickets', () => {
   async function deleteTicket(ticket: Ticket): Promise<boolean> {
     const id = parseTicketId(ticket.url)
     if (id === null) {
-      ui.error('工单信息异常，无法删除')
+      ui.error('预约信息异常，无法删除')
       return false
     }
     if (submitting.value) return false
@@ -138,7 +138,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     try {
       await endpoints.deleteTicket(id)
       await refreshWorking(true)
-      ui.success('已成功删除工单')
+      ui.success('已成功取消预约')
       return true
     } catch (caught) {
       ui.error(errorMessage(caught, '删除失败，请稍后重试'))

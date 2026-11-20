@@ -33,7 +33,7 @@ const tickets = useTicketsStore()
 
 const title = computed(() => {
   const value = route.query.title
-  return typeof value === 'string' && value.trim() ? value : '已成功提交工单'
+  return typeof value === 'string' && value.trim() ? value : '已成功提交预约'
 })
 
 function backHome(): void {

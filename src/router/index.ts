@@ -20,14 +20,17 @@ const router = createRouter({
           component: () => import('@/views/Calendar.vue')
         },
         {
+          path: 'records',
+          name: 'records',
+          component: () => import('@/views/Records.vue')
+        },
+        {
           path: 'working',
-          name: 'working',
-          component: () => import('@/views/WorkingRecord.vue')
+          redirect: { name: 'records', query: { filter: 'working' } }
         },
         {
           path: 'finish',
-          name: 'finish',
-          component: () => import('@/views/FinishedRecords.vue')
+          redirect: { name: 'records', query: { filter: 'finished' } }
         }
       ]
     },

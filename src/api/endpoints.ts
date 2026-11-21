@@ -15,6 +15,12 @@ import type {
 } from './types'
 
 export const endpoints = {
+  getSync(): Promise<Record<string, number>> {
+    return api.get<Record<string, number>>('/sync').then((response) => response.data)
+  },
+  getSyncConfig(): Promise<{ interval_ms: number }> {
+    return api.get<{ interval_ms: number }>('/sync/config').then((response) => response.data)
+  },
   listCampuses(params: { page?: number; pageSize?: number } = {}): Promise<Page<Campus>> {
     return api.get<Page<Campus>>('/campuses', { params }).then((response) => response.data)
   },

@@ -10,6 +10,28 @@ vi.mock('@/api/endpoints', () => ({ endpoints: {
 const page = (items: unknown[]) => ({ items, total: items.length, page: 1, pageSize: 100 })
 
 describe('catalog loading', () => {
+  it('retains the last location snapshot if a swap fails', async () => {
+    setActivePinia(createPinia())
+    vi.mocked(endpoints.listCampuses).mockResolvedValueOnce(page([{ id: 1, name: '旧校区' }]) as never).mockRejectedValueOnce(new Error('offline'))
+    vi.mocked(endpoints.listRooms).mockResolvedValue(page([]) as never)
+    vi.mocked(endpoints.listServiceDates).mockResolvedValue(page([]) as never)
+    const store = useCatalogStore()
+    expect(await store.reloadLocations()).toBe(true)
+    await expect(store.swapLocations()).rejects.toThrow('offline')
+    expect(store.campuses[0].name).toBe('旧校区')
+  })
+  it('clears a foreground location error after a successful background swap', async () => {
+    setActivePinia(createPinia())
+    vi.mocked(endpoints.listCampuses).mockRejectedValueOnce(new Error('offline')).mockResolvedValue(page([{ id: 1, name: '校区' }]) as never)
+    vi.mocked(endpoints.listRooms).mockResolvedValue(page([]) as never)
+    vi.mocked(endpoints.listServiceDates).mockResolvedValue(page([]) as never)
+    const store = useCatalogStore()
+    expect(await store.reloadLocations()).toBe(false)
+    expect(store.error).not.toBe('')
+    await store.swapLocations()
+    expect(store.error).toBe('')
+    expect(store.campuses[0].name).toBe('校区')
+  })
   it('keeps locations available when announcements fail and blocks full refresh', async () => {
     setActivePinia(createPinia())
     vi.mocked(endpoints.listCampuses).mockResolvedValue(page([{ id: 1, name: '校区' }]) as never)

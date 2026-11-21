@@ -25,9 +25,11 @@ import { fetchAllPages } from '@/api/pagination'
 import MarkdownContent from '@/components/MarkdownContent.vue'
 import VuxButton from '@/components/ui/VuxButton.vue'
 import VuxPopup from '@/components/ui/VuxPopup.vue'
+import { useCatalogStore } from '@/stores/catalog'
 
 const show = defineModel<boolean>({ default: false })
 const emit = defineEmits<{ agree: [content: string] }>()
+const catalog = useCatalogStore()
 const content = ref('')
 const loading = ref(false)
 const error = ref('')
@@ -93,5 +95,8 @@ function agree(): void {
 }
 
 watch(show, (visible) => { if (visible) void load(); else stop() }, { immediate: true })
+watch(() => catalog.tosContent, (value) => {
+  if (show.value && (loading.value || (content.value && value.trim() !== content.value))) void load()
+})
 onBeforeUnmount(stop)
 </script>

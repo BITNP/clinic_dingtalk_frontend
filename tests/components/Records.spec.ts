@@ -56,4 +56,30 @@ describe('appointment records', () => {
     await flushPromises()
     expect(wrapper.findAll('.record').map((item) => item.text())).toEqual(['confirmed'])
   })
+
+  it('swaps loaded pages while preserving an open edit draft', async () => {
+    setActivePinia(createPinia())
+    vi.mocked(endpoints.listTickets).mockReset()
+    vi.mocked(endpoints.listTickets)
+      .mockResolvedValueOnce({ items: [{ url: '/api/tickets/1', status: 'pending' } as never], total: 2, page: 1, pageSize: 1 })
+      .mockResolvedValueOnce({ items: [{ url: '/api/tickets/2', status: 'completed' } as never], total: 2, page: 2, pageSize: 1 })
+      .mockResolvedValueOnce({ items: [{ url: '/api/tickets/1', status: 'confirmed' } as never], total: 2, page: 1, pageSize: 1 })
+      .mockResolvedValueOnce({ items: [{ url: '/api/tickets/2', status: 'completed' } as never], total: 2, page: 2, pageSize: 1 })
+    const tickets = (await import('@/stores/tickets')).useTicketsStore()
+    const wrapper = mount(Records, { global: { stubs: {
+      RecordPreview: { props: ['record'], template: '<button class="record" @click="$emit(\'edit\')">{{ record.status }}</button>' },
+      VuxPopup: { template: '<div><slot /></div>' },
+      PopupContent: { template: '<input class="draft" value="保留草稿">' }
+    } } })
+    await flushPromises()
+    await wrapper.findAll('button').find((item) => item.text() === '加载更多')!.trigger('click')
+    await flushPromises()
+    await wrapper.find('.record').trigger('click')
+    await wrapper.find('.draft').setValue('未保存的内容')
+    await tickets.swapRecords()
+    await wrapper.vm.$nextTick()
+    expect(wrapper.findAll('.record').map((item) => item.text())).toEqual(['confirmed', 'completed'])
+    expect((wrapper.find('.draft').element as HTMLInputElement).value).toBe('未保存的内容')
+    wrapper.unmount()
+  })
 })

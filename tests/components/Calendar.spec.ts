@@ -45,4 +45,19 @@ describe('appointment calendar', () => {
     expect(endpoints.recommendRoom).toHaveBeenCalledWith(1, '2099-01-02')
     expect(push).toHaveBeenCalledWith({ name: 'record', query: { date: '2099-01-02', campus: '1', room: '2' } })
   })
+
+  it('keeps the selected campus when a background snapshot removes its service', async () => {
+    const wrapper = setup(0)
+    const catalog = useCatalogStore()
+    const oldDates = [...catalog.serviceDates]
+    await wrapper.find('button').trigger('click')
+    await wrapper.find('.campus-option').trigger('click')
+    catalog.serviceDates = []
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('该校区当天无服务')
+    catalog.serviceDates = oldDates
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.campus-option').classes()).toContain('selected')
+    wrapper.unmount()
+  })
 })

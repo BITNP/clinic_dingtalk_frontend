@@ -27,26 +27,36 @@ export const useTicketsStore = defineStore('tickets', () => {
   const createUncertain = ref(false)
   const uncertainChecked = ref(false)
   const lastCreated = ref<Ticket | null>(null)
+  let workingVersion = 0
+  let recordsSwap: ((isCurrent: () => boolean) => Promise<void>) | null = null
 
   const hasWorking = computed(() => Boolean(working.value))
   const hasMoreFinished = computed(() => finished.value.length < finishedTotal.value)
 
   let workingRequest: Promise<boolean> | null = null
+  let workingRequestVersion = 0
   function refreshWorking(silent = false): Promise<boolean> {
-    if (workingRequest) return workingRequest
+    if (workingRequest) {
+      if (workingRequestVersion === workingVersion) return workingRequest
+      return workingRequest.then(() => refreshWorking(silent))
+    }
     workingRequest = loadWorking(silent).finally(() => { workingRequest = null })
+    workingRequestVersion = workingVersion
     return workingRequest
   }
 
   async function loadWorking(silent: boolean): Promise<boolean> {
     workingLoading.value = true
+    const version = ++workingVersion
 
     try {
       const response = await endpoints.getWorkingTicket()
+      if (version !== workingVersion) return false
       working.value = response.count > 0 && response.data ? response.data : null
       workingLoaded.value = true
       return true
     } catch (caught) {
+      if (version !== workingVersion) return false
       workingLoaded.value = false
       if (!silent) {
         ui.error(errorMessage(caught, '无法获取当前预约'))
@@ -55,6 +65,25 @@ export const useTicketsStore = defineStore('tickets', () => {
     } finally {
       workingLoading.value = false
     }
+  }
+
+  async function swapWorking(isCurrent: () => boolean = () => true): Promise<void> {
+    if (workingRequest) await workingRequest
+    if (submitting.value) throw new Error('ticket mutation in progress')
+    const version = ++workingVersion
+    const response = await endpoints.getWorkingTicket()
+    if (!isCurrent() || version !== workingVersion || submitting.value) throw new Error('ticket snapshot superseded')
+    working.value = response.count > 0 && response.data ? response.data : null
+    workingLoaded.value = true
+  }
+
+  function registerRecordsSwap(callback: (isCurrent: () => boolean) => Promise<void>): () => void {
+    recordsSwap = callback
+    return () => { if (recordsSwap === callback) recordsSwap = null }
+  }
+
+  async function swapRecords(isCurrent: () => boolean = () => true): Promise<void> {
+    if (recordsSwap) await recordsSwap(isCurrent)
   }
 
   function resetFinished(): void {
@@ -91,6 +120,7 @@ export const useTicketsStore = defineStore('tickets', () => {
   async function createTicket(draft: TicketDraft): Promise<boolean> {
     if (submitting.value || createUncertain.value) return false
     submitting.value = true
+    workingVersion++
 
     try {
       const created = await endpoints.createTicket(draftToCreateBody(draft))
@@ -131,6 +161,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
     if (submitting.value) return false
     submitting.value = true
+    workingVersion++
 
     try {
       const updated = await endpoints.updateTicket(id, draftToUpdateBody(draft))
@@ -155,6 +186,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     }
     if (submitting.value) return false
     submitting.value = true
+    workingVersion++
 
     try {
       await endpoints.deleteTicket(id)
@@ -185,6 +217,9 @@ export const useTicketsStore = defineStore('tickets', () => {
     hasWorking,
     hasMoreFinished,
     refreshWorking,
+    swapWorking,
+    registerRecordsSwap,
+    swapRecords,
     resetFinished,
     loadFinishedPage,
     createTicket,

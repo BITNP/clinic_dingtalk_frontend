@@ -94,6 +94,21 @@ describe('finished ticket pagination', () => {
 })
 
 describe('ticket mutations', () => {
+  it('gets a fresh working snapshot after a mutation invalidates an in-flight read', async () => {
+    let finish!: (value: { count: number }) => void
+    vi.mocked(endpoints.getWorkingTicket)
+      .mockImplementationOnce(() => new Promise((resolve) => { finish = resolve }))
+      .mockResolvedValueOnce({ count: 1, data: ticket(4, 'pending') })
+    vi.mocked(endpoints.createTicket).mockResolvedValueOnce(ticket(4, 'pending'))
+    const store = useTicketsStore()
+    const oldRead = store.refreshWorking()
+    const creation = store.createTicket(draft())
+    finish({ count: 0 })
+    await oldRead
+    expect(await creation).toBe(true)
+    expect(store.working?.url).toBe('/api/tickets/4')
+    expect(endpoints.getWorkingTicket).toHaveBeenCalledTimes(2)
+  })
   it('reconciles an uncertain create and prevents a second request', async () => {
     vi.mocked(endpoints.createTicket).mockRejectedValueOnce(new Error('connection lost'))
     const store = useTicketsStore()

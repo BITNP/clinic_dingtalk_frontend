@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 
 import VuxButton from '@/components/ui/VuxButton.vue'
 import VuxLoading from '@/components/ui/VuxLoading.vue'
@@ -47,15 +47,26 @@ import { useCatalogStore } from '@/stores/catalog'
 import { useSessionStore } from '@/stores/session'
 import { useTicketsStore } from '@/stores/tickets'
 import { useUiStore } from '@/stores/ui'
+import { createPoller } from '@/sync/poller'
 
 const session = useSessionStore()
 const catalog = useCatalogStore()
 const tickets = useTicketsStore()
 const ui = useUiStore()
+const sync = createPoller({
+  announcement: (isCurrent) => catalog.swapAnnouncements(isCurrent),
+  location: (isCurrent) => catalog.swapLocations(isCurrent),
+  record: async (isCurrent) => {
+    const results = await Promise.allSettled([tickets.swapWorking(isCurrent), tickets.swapRecords(isCurrent)])
+    if (results.some((result) => result.status === 'rejected')) throw new Error('record swap failed')
+  }
+})
+watch(() => session.ready, (ready) => { if (!ready) sync.stop() })
 
 async function boot(): Promise<void> {
   const ok = await session.ensure()
   if (!ok) return
+  void sync.start()
   await Promise.allSettled([catalog.ensure(), tickets.refreshWorking()])
 }
 
@@ -64,4 +75,5 @@ async function retry(): Promise<void> {
 }
 
 onMounted(boot)
+onBeforeUnmount(() => sync.stop())
 </script>

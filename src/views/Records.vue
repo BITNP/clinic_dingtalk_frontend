@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { endpoints } from '@/api/endpoints'
 import { errorMessage } from '@/api/errors'
@@ -37,23 +37,49 @@ const loading = ref(false)
 const error = ref('')
 const editing = ref<Ticket | null>(null)
 let generation = 0
+let active = true
+let pageSize = 20
 onBeforeRouteLeave(() => !tickets.submitting)
 const hasMore = computed(() => page.value === 0 || records.value.length < total.value)
 async function loadMore(): Promise<void> {
   if (loading.value || !hasMore.value) return
   loading.value = true
   error.value = ''
-  const request = generation
+  const request = ++generation
   try {
     const result = await endpoints.listTickets(page.value + 1)
     if (request !== generation) return
     const seen = new Set(records.value.map((record) => record.url))
     records.value.push(...result.items.filter((record) => !seen.has(record.url)))
     page.value = result.page
+    pageSize = result.pageSize
     total.value = result.items.length ? result.total : records.value.length
   } catch (caught) { if (request === generation) error.value = errorMessage(caught, '无法获取预约记录') }
   finally { if (request === generation) loading.value = false }
 }
+async function swap(isCurrent: () => boolean): Promise<void> {
+  if (loading.value || tickets.submitting) throw new Error('record list busy')
+  const version = ++generation
+  const depth = page.value
+  if (!depth) return
+  const items: Ticket[] = []
+  let newTotal = 0
+  let lastPage = 0
+  for (let current = 1; current <= depth; current++) {
+    const result = await endpoints.listTickets(current, pageSize)
+    items.push(...result.items)
+    lastPage = current
+    newTotal = result.total
+    if (!result.items.length || items.length >= newTotal) break
+  }
+  if (!active || !isCurrent()) return
+  if (version !== generation || loading.value || tickets.submitting) throw new Error('record snapshot superseded')
+  records.value = items
+  total.value = newTotal
+  page.value = lastPage
+}
+const unregister = tickets.registerRecordsSwap(swap)
+onBeforeUnmount(() => { active = false; generation++; unregister() })
 async function changed(): Promise<void> {
   editing.value = null
   generation++

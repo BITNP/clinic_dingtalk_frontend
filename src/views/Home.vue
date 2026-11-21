@@ -3,8 +3,8 @@
     <div class="weui-panel weui-panel_access">
       <div class="weui-panel__hd">公告</div>
       <div class="weui-panel__bd">
-        <p v-if="announcementLoading" class="home-message">正在加载公告…</p>
-        <div v-else-if="announcementError" class="home-message">
+        <p v-if="catalog.announcementsLoading && !catalog.announcementsLoaded" class="home-message">正在加载公告…</p>
+        <div v-else-if="catalog.announcementsError && !catalog.announcementsLoaded" class="home-message">
           <p>公告加载失败，请重试</p>
           <VuxButton @click="loadAnnouncements">重试</VuxButton>
         </div>
@@ -95,12 +95,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { Announcement } from '@/api/types'
-import { endpoints } from '@/api/endpoints'
-import { fetchAllPages } from '@/api/pagination'
 import MarkdownContent from '@/components/MarkdownContent.vue'
 import VuxButton from '@/components/ui/VuxButton.vue'
 import VuxPopup from '@/components/ui/VuxPopup.vue'
@@ -115,13 +113,12 @@ const catalog = useCatalogStore()
 const tickets = useTicketsStore()
 const router = useRouter()
 const showpopup = ref(false)
-const selected = ref<Announcement | null>(null)
-const announcements = ref<Announcement[]>([])
-const announcementLoading = ref(true)
-const announcementError = ref(false)
+const selectedId = ref<number | null>(null)
+const selected = computed(() => catalog.announcements.find((item) => item.id === selectedId.value) ?? null)
+watch(selected, (value) => { if (!value) showpopup.value = false })
 
 const orderedAnnouncements = computed(() =>
-  [...announcements.value].sort((a, b) => a.priority - b.priority)
+  [...catalog.announcements].sort((a, b) => a.priority - b.priority)
 )
 const room = computed(() => catalog.rooms.find((item) => item.name === tickets.working?.campus))
 const campusName = computed(() => catalog.campuses.find((item) => item.id === room.value?.campus_id)?.name || '暂无校区信息')
@@ -131,12 +128,7 @@ const serviceTime = computed(() => {
 })
 
 async function loadAnnouncements(): Promise<void> {
-  announcementLoading.value = true
-  announcementError.value = false
-  try {
-    announcements.value = await fetchAllPages((page, pageSize) => endpoints.listAnnouncements({ active: true, page, pageSize }))
-  } catch { announcementError.value = true }
-  finally { announcementLoading.value = false }
+  await catalog.loadAnnouncements()
 }
 
 function viewWorking(): void { void router.push({ name: 'records' }) }
@@ -146,7 +138,7 @@ function tagLabel(tag: string): string {
 }
 
 function clickItem(item: Announcement): void {
-  selected.value = item
+  selectedId.value = item.id
   showpopup.value = true
 }
 

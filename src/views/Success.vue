@@ -53,7 +53,7 @@ const serviceTime = computed(() => {
 })
 
 function backHome(): void {
-  router.push({ name: 'home' })
+  router.push({ name: 'announcements' })
   void tickets.refreshWorking()
 }
 </script>

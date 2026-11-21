@@ -26,11 +26,11 @@ const router = createRouter({
         },
         {
           path: 'working',
-          redirect: { name: 'records', query: { filter: 'working' } }
+          redirect: { name: 'records' }
         },
         {
           path: 'finish',
-          redirect: { name: 'records', query: { filter: 'finished' } }
+          redirect: { name: 'records' }
         }
       ]
     },

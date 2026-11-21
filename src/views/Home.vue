@@ -139,7 +139,7 @@ async function loadAnnouncements(): Promise<void> {
   finally { announcementLoading.value = false }
 }
 
-function viewWorking(): void { void router.push({ name: 'records', query: { filter: 'working' } }) }
+function viewWorking(): void { void router.push({ name: 'records' }) }
 
 function tagLabel(tag: string): string {
   return announcementTagLabel(tag)

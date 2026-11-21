@@ -7,7 +7,7 @@
           <p>{{ error }}</p>
           <VuxButton @click="load">重试</VuxButton>
         </template>
-        <MarkdownContent v-else :source="content" legacy-disclaimer />
+        <MarkdownContent v-else :source="content" />
       </div>
       <br />
       <VuxButton type="primary" :disabled="loading || !!error || remaining > 0" @click="agree">

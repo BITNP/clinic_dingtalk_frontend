@@ -84,7 +84,7 @@
         </div>
 
         <div class="card-padding">
-          <MarkdownContent :source="selected.content" :legacy-disclaimer="selected.tag === 'tos'" />
+          <MarkdownContent :source="selected.content" />
         </div>
 
         <div class="confirm-btn">

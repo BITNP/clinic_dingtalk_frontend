@@ -20,43 +20,6 @@ function setup() {
 }
 
 describe('home', () => {
-  it('renders the disclaimer body with Markdown structure in its detail popup', async () => {
-    vi.mocked(endpoints.listAnnouncements).mockResolvedValue({
-      items: [{ id: 1, title: '免责声明', brief: '请阅读', content: '## 免责声明\n\n请注意：\n\n1. 备份数据\n2. 确认风险', tag: 'tos', priority: 1, lastEditedTime: '2099-01-01' } as never],
-      total: 1, page: 1, pageSize: 100
-    })
-    const { wrapper } = setup()
-    await flushPromises()
-    await wrapper.find('.weui-media-box').trigger('click')
-    expect(wrapper.find('.card-padding h2').text()).toBe('免责声明')
-    expect(wrapper.findAll('.card-padding ol li').map((item) => item.text())).toEqual(['备份数据', '确认风险'])
-  })
-
-  it('renders legacy escaped Markdown in the disclaimer body', async () => {
-    vi.mocked(endpoints.listAnnouncements).mockResolvedValue({
-      items: [{ id: 1, title: '免责声明', brief: '请阅读', content: '\\# 免责声明\n\n请您\\*\\*仔细阅读\\*\\*。\n\n1\\. 备份数据', tag: 'tos', priority: 1, lastEditedTime: '2099-01-01' } as never],
-      total: 1, page: 1, pageSize: 100
-    })
-    const { wrapper } = setup()
-    await flushPromises()
-    await wrapper.find('.weui-media-box').trigger('click')
-    expect(wrapper.find('.card-padding h1').text()).toBe('免责声明')
-    expect(wrapper.find('.card-padding strong').text()).toBe('仔细阅读')
-    expect(wrapper.find('.card-padding ol li').text()).toBe('备份数据')
-  })
-
-  it('preserves intentionally escaped Markdown in ordinary announcements', async () => {
-    vi.mocked(endpoints.listAnnouncements).mockResolvedValue({
-      items: [{ id: 1, title: '公告', brief: '简介', content: '\\# 示例\n\n\\*\\*文字\\*\\*', tag: 'normal', priority: 1, lastEditedTime: '2099-01-01' } as never],
-      total: 1, page: 1, pageSize: 100
-    })
-    const { wrapper } = setup()
-    await flushPromises()
-    await wrapper.find('.weui-media-box').trigger('click')
-    expect(wrapper.find('.card-padding').text()).toContain('# 示例')
-    expect(wrapper.find('.card-padding').text()).toContain('**文字**')
-    expect(wrapper.find('.card-padding h1').exists()).toBe(false)
-  })
   it('renders announcement title, summary and detail as sanitized Markdown', async () => {
     vi.mocked(endpoints.listAnnouncements).mockResolvedValue({
       items: [{ id: 1, title: '**重要**', brief: '摘要 [链接](https://example.com)\n\n- 列表', content: '## 正文\n\n<script>alert(1)</script>', tag: 'normal', priority: 1, lastEditedTime: '2099-01-01' } as never],

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="weui-wepay-flow">
+    <div v-if="!isTerminal" class="weui-wepay-flow">
       <div class="weui-wepay-flow__bd">
         <div class="weui-wepay-flow__li weui-wepay-flow__li_done">
           <div class="weui-wepay-flow__state">1</div>
@@ -9,10 +9,10 @@
 
         <div
           class="weui-wepay-flow__line"
-          :class="lineClass(line1Done, '正在审核')"
+          :class="lineClass(line1Done, line1Tip)"
         >
           <div class="weui-wepay-flow__process"></div>
-          <div v-if="!line1Done" class="weui-wepay-flow__info-top">正在审核</div>
+          <div v-if="line1Tip" class="weui-wepay-flow__info-top">{{ line1Tip }}</div>
         </div>
 
         <div
@@ -25,7 +25,7 @@
 
         <div
           class="weui-wepay-flow__line"
-          :class="lineClass(line2Done, '可以前往诊所')"
+          :class="lineClass(line2Done, line2Tip)"
         >
           <div class="weui-wepay-flow__process"></div>
           <div v-if="!line2Done && line2Tip" class="weui-wepay-flow__info-top">
@@ -43,7 +43,7 @@
 
         <div
           class="weui-wepay-flow__line"
-          :class="lineClass(line3Done, '正在服务')"
+          :class="lineClass(line3Done, line3Tip)"
         >
           <div class="weui-wepay-flow__process"></div>
           <div v-if="!line3Done && line3Tip" class="weui-wepay-flow__info-top">
@@ -94,7 +94,7 @@
 import { computed } from 'vue'
 
 import type { Ticket } from '@/api/types'
-import { isEditableStatus, isFinishedStatus, statusLabel } from '@/domain/status'
+import { isEditableStatus, statusLabel, terminalInfo } from '@/domain/status'
 import { buildPreviewItems } from '@/domain/ticket'
 
 const props = defineProps<{
@@ -108,26 +108,28 @@ defineEmits<{
 const status = computed(() => props.record.status)
 const items = computed(() => buildPreviewItems(props.record))
 const canEdit = computed(() => isEditableStatus(props.record.status))
+const isTerminal = computed(() => terminalInfo(status.value) !== null)
 
-const line1Done = computed(() => status.value !== 'pending')
+const line1Done = computed(() => ['confirmed', 'arrived', 'in_progress', 'completed'].includes(status.value))
+const line1Tip = computed(() => status.value === 'pending' ? '正在审核' : '')
 const state2Done = computed(() =>
-  ['confirmed', 'arrived', 'in_progress', 'completed', 'referred'].includes(status.value)
+  ['confirmed', 'arrived', 'in_progress', 'completed'].includes(status.value)
 )
 const line2Done = computed(() =>
-  ['rejected', 'in_progress', 'completed', 'referred', 'no_show'].includes(status.value)
+  ['arrived', 'in_progress', 'completed'].includes(status.value)
 )
 const state3Done = computed(() =>
-  ['in_progress', 'completed', 'referred'].includes(status.value)
+  ['arrived', 'in_progress', 'completed'].includes(status.value)
 )
 const line3Done = computed(() =>
-  ['rejected', 'completed', 'referred', 'no_show'].includes(status.value)
+  status.value === 'completed'
 )
-const state4Done = computed(() => isFinishedStatus(status.value))
+const state4Done = computed(() => status.value === 'completed')
 
 const line2Tip = computed(() =>
-  ['confirmed', 'arrived'].includes(status.value) ? '可以前往诊所' : ''
+  status.value === 'confirmed' ? '可以前往诊所' : ''
 )
-const line3Tip = computed(() => (status.value === 'in_progress' ? '正在服务' : ''))
+const line3Tip = computed(() => status.value === 'arrived' ? '等待服务' : status.value === 'in_progress' ? '正在服务' : '')
 
 function lineClass(done: boolean, tip: string): Record<string, boolean> {
   return {

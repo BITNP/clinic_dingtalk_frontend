@@ -6,7 +6,7 @@
         :key="current.id"
         style="margin: 3px 10px; text-align: center"
       >
-        {{ current.brief || current.title }}
+        <MarkdownContent :source="current.brief || current.title" />
       </div>
     </transition>
   </div>
@@ -16,6 +16,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { useCatalogStore } from '@/stores/catalog'
+import MarkdownContent from '@/components/MarkdownContent.vue'
 
 const catalog = useCatalogStore()
 const index = ref(0)

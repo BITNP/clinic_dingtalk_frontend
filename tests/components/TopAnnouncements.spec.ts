@@ -64,4 +64,11 @@ describe('TopAnnouncements', () => {
 
     wrapper.unmount()
   })
+
+  it('renders Markdown in the pinned announcement', () => {
+    useCatalogStore().announcements = [announcement(1, '**重要**')]
+    const wrapper = mount(TopAnnouncements)
+    expect(wrapper.find('strong').text()).toBe('重要')
+    wrapper.unmount()
+  })
 })

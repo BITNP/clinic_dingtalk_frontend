@@ -20,6 +20,25 @@ function setup() {
 }
 
 describe('home', () => {
+  it('renders announcement title, summary and detail as sanitized Markdown', async () => {
+    vi.mocked(endpoints.listAnnouncements).mockResolvedValue({
+      items: [{ id: 1, title: '**重要**', brief: '摘要 [链接](https://example.com)\n\n- 列表', content: '## 正文\n\n<script>alert(1)</script>', tag: 'normal', priority: 1, lastEditedTime: '2099-01-01' } as never],
+      total: 1, page: 1, pageSize: 100
+    })
+    const { wrapper } = setup()
+    await flushPromises()
+    expect(wrapper.find('.weui-media-box__title strong').text()).toBe('重要')
+    expect(wrapper.find('.weui-media-box__desc li').text()).toBe('列表')
+    const link = wrapper.find('.weui-media-box__desc a')
+    expect(link.attributes('href')).toBe('https://example.com')
+    link.element.addEventListener('click', (event) => event.preventDefault())
+    await link.trigger('click')
+    expect(wrapper.find('.card-padding').exists()).toBe(false)
+    await wrapper.find('.weui-media-box').trigger('click')
+    expect(wrapper.find('.card-padding h2').text()).toBe('正文')
+    expect(wrapper.find('.card-padding script').exists()).toBe(false)
+    expect(wrapper.find('.weui-cell__ft strong').text()).toBe('重要')
+  })
   it('shows the current appointment and location even if announcements fail', async () => {
     vi.mocked(endpoints.listAnnouncements).mockRejectedValue(new Error('offline'))
     const { wrapper, catalog, tickets } = setup()

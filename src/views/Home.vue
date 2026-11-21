@@ -13,12 +13,13 @@
           v-for="item in orderedAnnouncements"
           :key="item.id"
           class="weui-media-box weui-media-box_text"
-          @click="clickItem(item)"
+          @click="clickItem(item, $event)"
         >
-          <h4 class="weui-media-box__title">{{ item.title }}</h4>
-          <p class="weui-media-box__desc">
-            [{{ tagLabel(item.tag) }}] {{ item.brief }}
-          </p>
+          <h4 class="weui-media-box__title"><MarkdownContent :source="item.title" inline /></h4>
+          <div class="weui-media-box__desc">
+            <span>[{{ tagLabel(item.tag) }}]</span>
+            <MarkdownContent :source="item.brief" />
+          </div>
         </div>
       </div>
       <div class="weui-panel__ft"></div>
@@ -66,7 +67,7 @@
             <div class="weui-cell__bd">
               <p><label class="vux-label">标题</label></p>
             </div>
-            <div class="weui-cell__ft">{{ selected.title }}</div>
+            <div class="weui-cell__ft"><MarkdownContent :source="selected.title" inline /></div>
           </div>
           <div class="weui-cell cell-grey">
             <div class="weui-cell__bd">
@@ -137,7 +138,8 @@ function tagLabel(tag: string): string {
   return announcementTagLabel(tag)
 }
 
-function clickItem(item: Announcement): void {
+function clickItem(item: Announcement, event: MouseEvent): void {
+  if (event.target instanceof Element && event.target.closest('a')) return
   selectedId.value = item.id
   showpopup.value = true
 }

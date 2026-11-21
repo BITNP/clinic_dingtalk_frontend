@@ -61,33 +61,34 @@
     </div>
 
     <VuxPopup v-model:show="showpopup" position="right" width="100%">
-      <div v-if="selected" style="z-index: 999; margin: 10px">
-        <div class="weui-cells vux-no-group-title">
-          <div class="weui-cell cell-grey">
-            <div class="weui-cell__bd">
-              <p><label class="vux-label">标题</label></p>
+      <div v-if="selected" class="announcement-dialog">
+        <div class="announcement-dialog__content">
+          <div class="weui-cells vux-no-group-title">
+            <div class="weui-cell cell-grey">
+              <div class="weui-cell__bd">
+                <p><label class="vux-label">标题</label></p>
+              </div>
+              <div class="weui-cell__ft"><MarkdownContent :source="selected.title" inline /></div>
             </div>
-            <div class="weui-cell__ft"><MarkdownContent :source="selected.title" inline /></div>
+            <div class="weui-cell cell-grey">
+              <div class="weui-cell__bd">
+                <p><label class="vux-label">公告类型</label></p>
+              </div>
+              <div class="weui-cell__ft">{{ tagLabel(selected.tag) }}</div>
+            </div>
+            <div class="weui-cell cell-grey">
+              <div class="weui-cell__bd">
+                <p><label class="vux-label">最后修改时间</label></p>
+              </div>
+              <div class="weui-cell__ft">{{ formatDateTime(selected.lastEditedTime) }}</div>
+            </div>
           </div>
-          <div class="weui-cell cell-grey">
-            <div class="weui-cell__bd">
-              <p><label class="vux-label">公告类型</label></p>
-            </div>
-            <div class="weui-cell__ft">{{ tagLabel(selected.tag) }}</div>
-          </div>
-          <div class="weui-cell cell-grey">
-            <div class="weui-cell__bd">
-              <p><label class="vux-label">最后修改时间</label></p>
-            </div>
-            <div class="weui-cell__ft">{{ formatDateTime(selected.lastEditedTime) }}</div>
+
+          <div class="card-padding">
+            <MarkdownContent :source="selected.content" />
           </div>
         </div>
-
-        <div class="card-padding">
-          <MarkdownContent :source="selected.content" />
-        </div>
-
-        <div class="confirm-btn">
+        <div class="announcement-dialog__actions">
           <VuxButton plain type="primary" @click="showpopup = false">确认</VuxButton>
         </div>
       </div>

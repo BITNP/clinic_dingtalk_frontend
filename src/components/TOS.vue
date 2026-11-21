@@ -1,19 +1,20 @@
 <template>
   <VuxPopup v-model:show="show" height="100%">
-    <div class="popup">
-      <div id="toc">
+    <div class="announcement-dialog">
+      <div id="toc" class="announcement-dialog__content">
         <p v-if="loading">正在加载免责声明…</p>
         <template v-else-if="error">
           <p>{{ error }}</p>
-          <VuxButton @click="load">重试</VuxButton>
         </template>
         <MarkdownContent v-else :source="content" />
       </div>
-      <br />
-      <VuxButton type="primary" :disabled="loading || !!error || remaining > 0" @click="agree">
-        {{ remaining > 0 ? `同意并继续（${remaining}s）` : '同意并继续' }}
-      </VuxButton>
-      <VuxButton @click="show = false">返回</VuxButton>
+      <div class="announcement-dialog__actions">
+        <VuxButton v-if="error" @click="load">重试</VuxButton>
+        <VuxButton type="primary" :disabled="loading || !!error || remaining > 0" @click="agree">
+          {{ remaining > 0 ? `同意并继续（${remaining}s）` : '同意并继续' }}
+        </VuxButton>
+        <VuxButton @click="show = false">返回</VuxButton>
+      </div>
     </div>
   </VuxPopup>
 </template>

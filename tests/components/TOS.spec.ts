@@ -20,6 +20,8 @@ describe('TOS popup', () => {
     const wrapper = mount(TOS, { props: { modelValue: true }, global: { stubs: { teleport: true } } })
     await flushPromises()
     const agree = () => wrapper.findAll('button').find((button) => button.text().includes('同意并继续'))!
+    expect(wrapper.find('.announcement-dialog__actions').findAll('button').map((button) => button.text())).toEqual(['同意并继续（5s）', '返回'])
+    expect(wrapper.find('.announcement-dialog__content').findAll('button')).toHaveLength(0)
     expect(agree().attributes('disabled')).toBeDefined()
     await vi.advanceTimersByTimeAsync(4900)
     expect(agree().attributes('disabled')).toBeDefined()
@@ -40,6 +42,7 @@ describe('TOS popup', () => {
     const wrapper = mount(TOS, { props: { modelValue: true }, global: { stubs: { teleport: true } } })
     await flushPromises()
     expect(wrapper.text()).toContain('加载失败')
+    expect(wrapper.find('.announcement-dialog__actions').text()).toContain('重试')
     expect(wrapper.findAll('button').find((button) => button.text().includes('同意并继续'))?.attributes('disabled')).toBeDefined()
     wrapper.unmount()
   })

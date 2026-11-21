@@ -36,6 +36,8 @@ describe('home', () => {
     expect(wrapper.find('.card-padding').exists()).toBe(false)
     await wrapper.find('.weui-media-box').trigger('click')
     expect(wrapper.find('.card-padding h2').text()).toBe('正文')
+    expect(wrapper.find('.announcement-dialog__actions button').text()).toBe('确认')
+    expect(wrapper.find('.announcement-dialog__content button').exists()).toBe(false)
     expect(wrapper.find('.card-padding script').exists()).toBe(false)
     expect(wrapper.find('.weui-cell__ft strong').text()).toBe('重要')
   })

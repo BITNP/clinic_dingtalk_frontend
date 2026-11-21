@@ -11,6 +11,22 @@ afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks() })
 beforeEach(() => { setActivePinia(createPinia()) })
 
 describe('TOS popup', () => {
+  it('renders legacy escaped disclaimer syntax without changing the agreed text', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] })
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(false)
+    const source = '\\# 免责声明\n\n请\\*\\*仔细阅读\\*\\*。'
+    vi.mocked(endpoints.listAnnouncements).mockResolvedValue({
+      items: [{ id: 1, content: source, priority: 1 } as never], total: 1, page: 1, pageSize: 100
+    })
+    const wrapper = mount(TOS, { props: { modelValue: true }, global: { stubs: { teleport: true } } })
+    await flushPromises()
+    expect(wrapper.find('h1').text()).toBe('免责声明')
+    expect(wrapper.find('strong').text()).toBe('仔细阅读')
+    await vi.advanceTimersByTimeAsync(5000)
+    await wrapper.findAll('button').find((button) => button.text().includes('同意并继续'))!.trigger('click')
+    expect(wrapper.emitted('agree')?.[0]).toEqual([source])
+    wrapper.unmount()
+  })
   it('requires five visible seconds before agreeing and resets on reopening', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] })
     vi.spyOn(document, 'hidden', 'get').mockReturnValue(false)
